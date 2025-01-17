@@ -5,7 +5,7 @@ export default function DayPage({params}){
     return(
         <>
         <Link href ="/">Go back</Link>
-        <p>Add your tasks for day: {date} </p>
+        <Link href="/account">Your Profile</Link>
         <DayEditing />
         </>
     )

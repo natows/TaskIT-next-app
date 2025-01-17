@@ -1,5 +1,5 @@
 export function logIn(login, password, email){
- return {username: login}
+ return {username: login, password: password, email: email}
 }
 
 export function currentUser(){

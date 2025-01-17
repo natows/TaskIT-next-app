@@ -2,7 +2,8 @@
 import Link from "next/link"
 import {useState, useEffect} from "react"
 import {currentUser, logout} from "./login/user.js"
-import Calendar from "./calendar.js"
+import Calendar from "./Calendar.js"
+import CurrentTasks from "./CurrentTasks.js"
 export default function HomePage() {
   const initialUser = currentUser();
   const [user, setUser] = useState(initialUser)
@@ -25,7 +26,10 @@ export default function HomePage() {
           <>
           <p>Welcome {initialUser.username}!</p>
           <button onClick={userToNull}>Log out</button>
-          <Link href="/account">Your account</Link>
+          <Link href="/account">Your Profile</Link>
+          <input type="text" placeholder="Browse your tasks"/>
+          <p>Get your day started!</p>
+          <CurrentTasks />
           <Calendar />
           </>
           :

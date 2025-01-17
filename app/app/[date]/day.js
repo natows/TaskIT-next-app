@@ -1,71 +1,114 @@
-"use client"
-import { useState } from "react";
+"use client";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation"; 
 
 export default function DayEditing() {
+    const { date } = useParams(); 
     const [taskList, setTaskList] = useState([]);
     const [newTask, setNewTask] = useState(""); 
     const [editTaskIndex, setEditTaskIndex] = useState(null);
-    const [editedTask, setEditedTask]= useState("");
+    const [editedTask, setEditedTask] = useState("");
     const [doneTasks, setDoneTasks] = useState([]);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const [descriptionInput, setDescriptionInput] = useState("");
+    const [showDescriptions, setShowDescriptions] = useState({});
+    const [prioritisations, setPrioritizations] = useState([])
+
+    useEffect(() => {
+        const storedTasks = localStorage.getItem("tasksByDate");
+        const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
+
+        if (parsedTasks[date]) {
+            setTaskList(parsedTasks[date].tasks || []);
+            setDoneTasks(parsedTasks[date].doneTasks || []);
+        }
+
+        setIsHydrated(true);
+    }, [date]);
+
+    useEffect(() => {
+        if (isHydrated) {
+            const storedTasks = localStorage.getItem("tasksByDate");
+            const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
+            parsedTasks[date] = {
+                tasks: taskList,
+                doneTasks: doneTasks,
+            };
+
+            localStorage.setItem("tasksByDate", JSON.stringify(parsedTasks));
+        }
+    }, [taskList, doneTasks, isHydrated, date]);
 
     const addTask = () => {
         if (newTask.trim() !== "") { 
-            setTaskList([...taskList, newTask]); 
+            setTaskList([...taskList, { name: newTask, description: "" }]); 
             setNewTask(""); 
         }
     };
 
-    function handleKeyDown(event, id)  {
+    const handleKeyDown = (event, id) => {
         if (id === 1) {
-            if (event.key === "Enter"){
+            if (event.key === "Enter") {
                 addTask();
             }
-        }
-        else {
-            if (event.key === "Enter"){
+        } else {
+            if (event.key === "Enter") {
                 updateTask();
             }
-
         }
     };
-    
+
     const removeTask = (task) => {
-        const updatedList = taskList.filter(t => t !== task);
+        const updatedList = taskList.filter((t) => t.name !== task.name);
         setTaskList(updatedList);
     };
 
     const handleEditTask = (task, index) => {
         setEditTaskIndex(index); 
-        setEditedTask(task);
+        setEditedTask(task.name);
     };
+
     const updateTask = () => {
         if (editedTask.trim() !== "") {
             const updatedList = [...taskList];
-            updatedList[editTaskIndex] = editedTask; 
+            updatedList[editTaskIndex] = { ...updatedList[editTaskIndex], name: editedTask }; 
             setTaskList(updatedList);
             setEditTaskIndex(null); 
             setEditedTask(""); 
         }
     };
 
-
-
     const toggleTaskStatus = (task) => {
-        if (doneTasks.includes(task)) {
-            const updatedList = doneTasks.filter(t => t !== task);
+        if (doneTasks.includes(task.name)) {
+            const updatedList = doneTasks.filter((t) => t !== task.name);
             setDoneTasks(updatedList);
         } else {
-            const updatedList = [...doneTasks, task];
+            const updatedList = [...doneTasks, task.name];
             setDoneTasks(updatedList);
         }
     };
 
-    const addDescription = () => {
-        
+    const addDescription = (index) => {
+        const updatedList = [...taskList];
+        updatedList[index] = { ...updatedList[index], description: descriptionInput };
+        setTaskList(updatedList);
+        setDescriptionInput("");
     };
+
+    const toggleDescriptionVisibility = (index) => {
+        setShowDescriptions((prev) => ({
+            ...prev,
+            [index]: !prev[index],
+        }));
+    };
+
+    if (!isHydrated) {
+        return null; 
+    }
 
     return (
         <div>
+            <h2>Tasks for {date}</h2>
             <input
                 type="text"
                 value={newTask}
@@ -90,10 +133,10 @@ export default function DayEditing() {
                             </div>
                         ) : (
                             <div>
-                                {task}
-                                <button onClick={() => removeTask(task)}>Remove</button>
+                                <button style = {{ borderRadius:"50%", width:"20px", height:"20px",backgroundColor:"pink"}} onClick={() => removeTask(task)}>-</button>
+                                <span>{task.name}</span>
                                 <button onClick={() => handleEditTask(task, index)}>Edit</button>
-                                {doneTasks.includes(task) ? (
+                                {doneTasks.includes(task.name) ? (
                                     <button
                                         style={{ color: "green", marginLeft: "10px" }}
                                         onClick={() => toggleTaskStatus(task)} 
@@ -102,6 +145,21 @@ export default function DayEditing() {
                                     </button>
                                 ) : (
                                     <button onClick={() => toggleTaskStatus(task)}>Mark as done</button>
+                                )}
+                                <button onClick={() => toggleDescriptionVisibility(index)}>
+                                    {showDescriptions[index] ? "Hide Description" : "Show Description"}
+                                </button>
+                                {showDescriptions[index] && (
+                                    <div>
+                                        <p>{task.description || "No description yet"}</p>
+                                        <input
+                                            type="text"
+                                            placeholder="Add description"
+                                            value={descriptionInput}
+                                            onChange={(e) => setDescriptionInput(e.target.value)}
+                                        />
+                                        <button onClick={() => addDescription(index)}>Save</button>
+                                    </div>
                                 )}
                             </div>
                         )}
