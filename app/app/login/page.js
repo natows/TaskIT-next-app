@@ -22,7 +22,7 @@ export default function loginPage(){
         router.push("/");
     };
 
-    function handleKeyDown(){
+    function handleKeyDown(event){
         if (event.key === "Enter"){
             loginOnClick();
         };
