@@ -1,41 +1,54 @@
-"use client"
-import {useState, useEffect, useRef} from "react"
-import {logIn} from "./user.js"
-import {useRouter} from "next/navigation"
-export default function loginPage(){
+"use client";
+import { useRef } from "react";
+import { logIn, currentUser } from "./user.js"; 
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
     const router = useRouter();
     const loginPrompt = useRef();
     const passwordPrompt = useRef();
-    const emailPrompt = useRef();
 
-    function loginOnClick(){
+    function loginOnClick() {
         const login = loginPrompt.current.value.trim();
         const password = passwordPrompt.current.value.trim();
-        const email = emailPrompt.current.value.trim();
-        if (!login || !password || !email) {
-            alert("Incomplete input");
+
+        if (!login || !password) {
+            alert("Please provide both username and password");
             return;
         }
-        const data = logIn(login,password, email);
-        localStorage.setItem("user", JSON.stringify(data));
 
-        router.push("/");
-    };
+        const user = logIn(login, password);
 
-    function handleKeyDown(event){
-        if (event.key === "Enter"){
+        if (user) {
+            localStorage.setItem("user", JSON.stringify(user));
+            router.push("/"); 
+        } else {
+            alert("Invalid login credentials");
+        }
+    }
+
+    function handleKeyDown(event) {
+        if (event.key === "Enter") {
             loginOnClick();
-        };
-    };
-    
+        }
+    }
 
     return (
         <div>
-            <p>Log into your account</p>
-            <input ref={loginPrompt} type="text" placeholder="Your username" onKeyDown={handleKeyDown}></input>
-            <input ref={passwordPrompt} type="password" placeholder="Your password" onKeyDown={handleKeyDown}></input>
-            <input ref={emailPrompt} type="text" placeholder="Your email" onKeyDown={handleKeyDown}></input>
-            <button onClick={loginOnClick}>Zaloguj</button>
+            <h2>Log into your account</h2>
+            <input
+                ref={loginPrompt}
+                type="text"
+                placeholder="Your username"
+                onKeyDown={handleKeyDown}
+            />
+            <input
+                ref={passwordPrompt}
+                type="password"
+                placeholder="Your password"
+                onKeyDown={handleKeyDown}
+            />
+            <button onClick={loginOnClick}>Log in</button>
         </div>
     );
 }

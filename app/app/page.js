@@ -4,9 +4,10 @@ import {useState, useEffect} from "react"
 import {currentUser, logout} from "./login/user.js"
 import Calendar from "./Calendar.js"
 import CurrentTasks from "./CurrentTasks.js"
+import BrowseTasks from "./BrowseTasks.js"
 export default function HomePage() {
   const initialUser = currentUser();
-  const [user, setUser] = useState(initialUser)
+  const [user, setUser] = useState(initialUser);
 
   useEffect(() => {
     if (user === null) {
@@ -27,7 +28,7 @@ export default function HomePage() {
           <p>Welcome {initialUser.username}!</p>
           <button onClick={userToNull}>Log out</button>
           <Link href="/account">Your Profile</Link>
-          <input type="text" placeholder="Browse your tasks"/>
+          <BrowseTasks />
           <p>Get your day started!</p>
           <CurrentTasks />
           <Calendar />

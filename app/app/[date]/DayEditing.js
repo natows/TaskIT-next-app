@@ -1,18 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation"; 
+import { useParams } from "next/navigation";
 
 export default function DayEditing() {
-    const { date } = useParams(); 
+    const { date } = useParams();
     const [taskList, setTaskList] = useState([]);
-    const [newTask, setNewTask] = useState(""); 
+    const [newTask, setNewTask] = useState("");
     const [editTaskIndex, setEditTaskIndex] = useState(null);
     const [editedTask, setEditedTask] = useState("");
-    const [doneTasks, setDoneTasks] = useState([]);
     const [isHydrated, setIsHydrated] = useState(false);
     const [descriptionInput, setDescriptionInput] = useState("");
     const [showDescriptions, setShowDescriptions] = useState({});
-    const [prioritisations, setPrioritizations] = useState([])
 
     useEffect(() => {
         const storedTasks = localStorage.getItem("tasksByDate");
@@ -20,7 +18,6 @@ export default function DayEditing() {
 
         if (parsedTasks[date]) {
             setTaskList(parsedTasks[date].tasks || []);
-            setDoneTasks(parsedTasks[date].doneTasks || []);
         }
 
         setIsHydrated(true);
@@ -31,18 +28,20 @@ export default function DayEditing() {
             const storedTasks = localStorage.getItem("tasksByDate");
             const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
             parsedTasks[date] = {
-                tasks: taskList,
-                doneTasks: doneTasks,
+                tasks: taskList,  
             };
 
             localStorage.setItem("tasksByDate", JSON.stringify(parsedTasks));
         }
-    }, [taskList, doneTasks, isHydrated, date]);
+    }, [taskList, isHydrated, date]);
 
     const addTask = () => {
-        if (newTask.trim() !== "") { 
-            setTaskList([...taskList, { name: newTask, description: "" }]); 
-            setNewTask(""); 
+        if (newTask.trim() !== "") {
+            setTaskList([
+                ...taskList,
+                { name: newTask, description: "", priority: "normal", done: false }  
+            ]);
+            setNewTask("");
         }
     };
 
@@ -64,30 +63,30 @@ export default function DayEditing() {
     };
 
     const handleEditTask = (task, index) => {
-        setEditTaskIndex(index); 
+        setEditTaskIndex(index);
         setEditedTask(task.name);
     };
 
     const updateTask = () => {
         if (editedTask.trim() !== "") {
             const updatedList = [...taskList];
-            updatedList[editTaskIndex] = { ...updatedList[editTaskIndex], name: editedTask }; 
+            updatedList[editTaskIndex] = { ...updatedList[editTaskIndex], name: editedTask };
             setTaskList(updatedList);
-            setEditTaskIndex(null); 
-            setEditedTask(""); 
+            setEditTaskIndex(null);
+            setEditedTask("");
         }
     };
 
     const toggleTaskStatus = (task) => {
-        if (doneTasks.includes(task.name)) {
-            const updatedList = doneTasks.filter((t) => t !== task.name);
-            setDoneTasks(updatedList);
-        } else {
-            const updatedList = [...doneTasks, task.name];
-            setDoneTasks(updatedList);
-        }
+        const updatedList = taskList.map(t => 
+            t.name === task.name 
+                ? { ...t, done: !t.done }  
+                : t
+        );
+        setTaskList(updatedList);
     };
 
+   
     const addDescription = (index) => {
         const updatedList = [...taskList];
         updatedList[index] = { ...updatedList[index], description: descriptionInput };
@@ -103,8 +102,14 @@ export default function DayEditing() {
     };
 
     if (!isHydrated) {
-        return null; 
+        return null;  
     }
+
+    const handlePrioritySet = (index, level) => {
+        const updatedList = [...taskList];
+        updatedList[index] = { ...updatedList[index], priority: level };
+        setTaskList(updatedList);
+    };
 
     return (
         <div>
@@ -120,7 +125,7 @@ export default function DayEditing() {
             <h3>Task List</h3>
             <ul>
                 {taskList.map((task, index) => (
-                    <li key={index}>
+                    <li key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         {editTaskIndex === index ? (
                             <div>
                                 <input
@@ -132,21 +137,37 @@ export default function DayEditing() {
                                 <button onClick={updateTask}>Update</button>
                             </div>
                         ) : (
-                            <div>
-                                <button style = {{ borderRadius:"50%", width:"20px", height:"20px",backgroundColor:"pink"}} onClick={() => removeTask(task)}>-</button>
+                            <div style={{ display: "flex", alignItems: "center" }}>
+                                <button
+                                    style={{
+                                        borderRadius: "50%",
+                                        width: "20px",
+                                        height: "20px",
+                                        backgroundColor: "pink",
+                                        marginRight: "10px",
+                                    }}
+                                    onClick={() => removeTask(task)}
+                                >
+                                    -
+                                </button>
                                 <span>{task.name}</span>
-                                <button onClick={() => handleEditTask(task, index)}>Edit</button>
-                                {doneTasks.includes(task.name) ? (
+                                <button onClick={() => handleEditTask(task, index)} style={{ marginLeft: "10px" }}>
+                                    Edit
+                                </button>
+                                {task.done ? (
                                     <button
                                         style={{ color: "green", marginLeft: "10px" }}
-                                        onClick={() => toggleTaskStatus(task)} 
+                                        onClick={() => toggleTaskStatus(task)}
                                     >
-                                        &#10004; 
+                                        &#10004;
                                     </button>
                                 ) : (
                                     <button onClick={() => toggleTaskStatus(task)}>Mark as done</button>
                                 )}
-                                <button onClick={() => toggleDescriptionVisibility(index)}>
+                                <button
+                                    onClick={() => toggleDescriptionVisibility(index)}
+                                    style={{ marginLeft: "10px" }}
+                                >
                                     {showDescriptions[index] ? "Hide Description" : "Show Description"}
                                 </button>
                                 {showDescriptions[index] && (
@@ -161,6 +182,42 @@ export default function DayEditing() {
                                         <button onClick={() => addDescription(index)}>Save</button>
                                     </div>
                                 )}
+
+                                <div style={{ display: "flex", gap: "10px", marginLeft: "10px" }}>
+                                    <button
+                                        onClick={() => handlePrioritySet(index, "low")}
+                                        style={{
+                                            width: "15px",
+                                            height: "15px",
+                                            borderRadius: "50%",
+                                            backgroundColor: task.priority === "low" ? "yellow" : "#fdf9b1",
+                                            textAlign: "center",
+                                            lineHeight: "20px",
+                                        }}
+                                    ></button>
+                                    <button
+                                        onClick={() => handlePrioritySet(index, "normal")}
+                                        style={{
+                                            width: "15px",
+                                            height: "15px",
+                                            borderRadius: "50%",
+                                            backgroundColor: task.priority === "normal" ? "#6ffd2a" : "#c3fdb1",
+                                            textAlign: "center",
+                                            lineHeight: "20px",
+                                        }}
+                                    ></button>
+                                    <button
+                                        onClick={() => handlePrioritySet(index, "high")}
+                                        style={{
+                                            width: "15px",
+                                            height: "15px",
+                                            borderRadius: "50%",
+                                            backgroundColor: task.priority === "high" ? "#fe623e" : "#fdbfb1",
+                                            textAlign: "center",
+                                            lineHeight: "20px",
+                                        }}
+                                    ></button>
+                                </div>
                             </div>
                         )}
                     </li>
