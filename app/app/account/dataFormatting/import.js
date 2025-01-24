@@ -1,5 +1,14 @@
-"use client"
+"use client";
+import { currentUser } from "../../login/user.js"; 
+
 export default function importTasks(event) {
+    const user = currentUser(); 
+    if (!user) {
+        alert("You need to be logged in to import tasks.");
+        return;
+    }
+
+    const userId = user.userId; 
     const file = event.target.files[0];
     if (!file) return;
 
@@ -18,6 +27,7 @@ export default function importTasks(event) {
             importedData = {};
 
             rows.forEach((row) => {
+                if (!row.trim()) return; 
                 const [date, name, description, priority, done] = row.split(",");
                 if (!importedData[date]) importedData[date] = { tasks: [] };
                 importedData[date].tasks.push({
@@ -45,19 +55,23 @@ export default function importTasks(event) {
                     done: task.getElementsByTagName("done")[0].textContent === "true",
                 })) };
             });
+        } else {
+            alert("Unsupported file format. Please upload a JSON, CSV, or XML file.");
+            return;
         }
 
-        const storedTasks = localStorage.getItem("tasksByDate");
-        const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
+        const storedData = localStorage.getItem(userId);
+        const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
+        const tasksByDate = parsedData.tasksByDate;
 
         Object.entries(importedData).forEach(([date, data]) => {
-            if (!parsedTasks[date]) {
-                parsedTasks[date] = { tasks: [] };
+            if (!tasksByDate[date]) {
+                tasksByDate[date] = { tasks: [] };
             }
-            parsedTasks[date].tasks = [...parsedTasks[date].tasks, ...data.tasks];
+            tasksByDate[date].tasks = [...tasksByDate[date].tasks, ...data.tasks];
         });
 
-        localStorage.setItem("tasksByDate", JSON.stringify(parsedTasks));
+        localStorage.setItem(userId, JSON.stringify({ ...parsedData, tasksByDate }));
         alert("Tasks successfully imported!");
     };
 

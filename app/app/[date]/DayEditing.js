@@ -68,6 +68,14 @@ export default function DayEditing() {
     const removeTask = (index) => {
         const updatedList = taskList.filter((_, i) => i !== index);
         setTaskList(updatedList);
+        if (taskList.length === 0){
+            const storedData = localStorage.getItem(userId);    
+            const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
+
+            delete parsedData.tasksByDate[date];
+
+            localStorage.setItem(userId, JSON.stringify(parsedData));
+        }
     };
 
     const handleEditTask = (task, index) => {

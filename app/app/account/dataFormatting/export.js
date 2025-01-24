@@ -1,25 +1,36 @@
-"use client"
+"use client";
+
+import { currentUser } from "../../login/user.js"; 
+
 export default function exportTasks(format) {
-    const storedTasks = localStorage.getItem("tasksByDate");
-    if (!storedTasks) {
+    const user = currentUser(); 
+    if (!user) {
+        alert("You need to be logged in to export tasks.");
+        return;
+    }
+
+    const userId = user.userId; 
+    const storedData = localStorage.getItem(userId);
+    if (!storedData) {
         alert("No tasks found to export.");
         return;
     }
-    
-    const tasks = JSON.parse(storedTasks);
+
+    const parsedData = JSON.parse(storedData);
+    const tasksByDate = parsedData.tasksByDate || {}; 
 
     let exportedData = "";
     let fileType = "";
     let fileName = `tasks_export.${format}`;
 
     if (format === "json") {
-        exportedData = JSON.stringify(tasks, null, 2); 
+        exportedData = JSON.stringify(tasksByDate, null, 2);
         fileType = "application/json";
     } else if (format === "csv") {
         const csvRows = [];
         csvRows.push("Date,Task Name,Description,Priority,Done"); 
 
-        for (const [date, taskData] of Object.entries(tasks)) {
+        for (const [date, taskData] of Object.entries(tasksByDate)) {
             taskData.tasks.forEach((task) => {
                 csvRows.push(
                     `${date},"${task.name}","${task.description}","${task.priority}",${task.done}`
@@ -33,7 +44,7 @@ export default function exportTasks(format) {
         const xmlRows = [];
         xmlRows.push("<tasks>");
 
-        for (const [date, taskData] of Object.entries(tasks)) {
+        for (const [date, taskData] of Object.entries(tasksByDate)) {
             xmlRows.push(`  <date value="${date}">`);
             taskData.tasks.forEach((task) => {
                 xmlRows.push("    <task>");
@@ -49,6 +60,9 @@ export default function exportTasks(format) {
         xmlRows.push("</tasks>");
         exportedData = xmlRows.join("\n");
         fileType = "application/xml";
+    } else {
+        alert("Unsupported format. Please choose 'json', 'csv', or 'xml'.");
+        return;
     }
 
     const blob = new Blob([exportedData], { type: fileType });
