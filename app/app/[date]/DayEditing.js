@@ -1,45 +1,53 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { currentUser } from "../login/user.js"; 
 
 export default function DayEditing() {
-    const { date } = useParams();
+    const { date } = useParams(); 
     const [taskList, setTaskList] = useState([]);
     const [newTask, setNewTask] = useState("");
     const [editTaskIndex, setEditTaskIndex] = useState(null);
     const [editedTask, setEditedTask] = useState("");
-    const [isHydrated, setIsHydrated] = useState(false);
     const [descriptionInput, setDescriptionInput] = useState("");
     const [showDescriptions, setShowDescriptions] = useState({});
+    const [isHydrated, setIsHydrated] = useState(false);
 
+
+    const user = currentUser();
+    if (!user) {
+        return <p>Please log in to manage tasks.</p>;
+    }
+    const userId = user.userId; 
+
+    
     useEffect(() => {
-        const storedTasks = localStorage.getItem("tasksByDate");
-        const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
+        const storedData = localStorage.getItem(userId);
+        const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
-        if (parsedTasks[date]) {
-            setTaskList(parsedTasks[date].tasks || []);
+        if (parsedData.tasksByDate[date]) {
+            setTaskList(parsedData.tasksByDate[date].tasks || []);
         }
 
         setIsHydrated(true);
-    }, [date]);
+    }, [date, userId]);
 
+    
     useEffect(() => {
         if (isHydrated) {
-            const storedTasks = localStorage.getItem("tasksByDate");
-            const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
-            parsedTasks[date] = {
-                tasks: taskList,  
-            };
+            const storedData = localStorage.getItem(userId);
+            const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
-            localStorage.setItem("tasksByDate", JSON.stringify(parsedTasks));
+            parsedData.tasksByDate[date] = { tasks: taskList };
+            localStorage.setItem(userId, JSON.stringify(parsedData));
         }
-    }, [taskList, isHydrated, date]);
+    }, [taskList, isHydrated, date, userId]);
 
     const addTask = () => {
         if (newTask.trim() !== "") {
             setTaskList([
                 ...taskList,
-                { name: newTask, description: "", priority: "normal", done: false }  
+                { name: newTask, description: "", priority: "normal", done: false }
             ]);
             setNewTask("");
         }
@@ -57,8 +65,8 @@ export default function DayEditing() {
         }
     };
 
-    const removeTask = (task) => {
-        const updatedList = taskList.filter((t) => t.name !== task.name);
+    const removeTask = (index) => {
+        const updatedList = taskList.filter((_, i) => i !== index);
         setTaskList(updatedList);
     };
 
@@ -78,15 +86,14 @@ export default function DayEditing() {
     };
 
     const toggleTaskStatus = (task) => {
-        const updatedList = taskList.map(t => 
-            t.name === task.name 
-                ? { ...t, done: !t.done }  
+        const updatedList = taskList.map((t) =>
+            t.name === task.name
+                ? { ...t, done: !t.done }
                 : t
         );
         setTaskList(updatedList);
     };
 
-   
     const addDescription = (index) => {
         const updatedList = [...taskList];
         updatedList[index] = { ...updatedList[index], description: descriptionInput };
@@ -101,15 +108,15 @@ export default function DayEditing() {
         }));
     };
 
-    if (!isHydrated) {
-        return null;  
-    }
-
     const handlePrioritySet = (index, level) => {
         const updatedList = [...taskList];
         updatedList[index] = { ...updatedList[index], priority: level };
         setTaskList(updatedList);
     };
+
+    if (!isHydrated) {
+        return null;
+    }
 
     return (
         <div>
@@ -146,7 +153,7 @@ export default function DayEditing() {
                                         backgroundColor: "pink",
                                         marginRight: "10px",
                                     }}
-                                    onClick={() => removeTask(task)}
+                                    onClick={() => removeTask(index)}
                                 >
                                     -
                                 </button>

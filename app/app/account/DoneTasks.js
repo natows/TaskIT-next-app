@@ -10,23 +10,26 @@ export default function DoneTasks() {
     const fetchAvailableDates = () => {
         const storedTasks = localStorage.getItem("tasksByDate");
         const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
-        const datesWithDoneTasks = Object.keys(parsedTasks).filter(
-            (date) => parsedTasks[date].doneTasks && parsedTasks[date].doneTasks.length > 0
+        const datesWithDoneTasks = Object.keys(parsedTasks).filter((date) => 
+            parsedTasks[date].tasks && 
+            parsedTasks[date].tasks.some((task) => task.done) 
         );
         setAvailableDates(datesWithDoneTasks);
     };
 
+    
     const getDoneTaskList = (date) => {
         const storedTasks = localStorage.getItem("tasksByDate");
         const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
         if (parsedTasks[date]) {
-            setDoneTasks(parsedTasks[date].doneTasks || []);
+            const tasksForDate = parsedTasks[date].tasks || [];
+            const doneTasksForDate = tasksForDate.filter((task) => task.done); 
+            setDoneTasks(doneTasksForDate);
         } else {
             setDoneTasks([]);
         }
     };
 
-    
     const handleDateChange = (event) => {
         const date = event.target.value; 
         setSelectedDate(date);
@@ -38,12 +41,12 @@ export default function DoneTasks() {
         const storedTasks = localStorage.getItem("tasksByDate");
         const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
         if (parsedTasks[selectedDate]) {
-            const updatedDoneTasks = parsedTasks[selectedDate].doneTasks.filter(
-                (task) => task !== taskToRemove
+            const updatedTasks = parsedTasks[selectedDate].tasks.map((task) =>
+                task.name === taskToRemove.name ? { ...task, done: false } : task 
             );
-            parsedTasks[selectedDate].doneTasks = updatedDoneTasks;
+            parsedTasks[selectedDate].tasks = updatedTasks;
             localStorage.setItem("tasksByDate", JSON.stringify(parsedTasks));
-            setDoneTasks(updatedDoneTasks);
+            setDoneTasks(updatedTasks.filter((task) => task.done)); 
         }
     };
 
@@ -79,7 +82,7 @@ export default function DoneTasks() {
                                 >
                                     -
                                 </button>
-                                <span>{task}</span>
+                                <span>{task.name}</span>
                             </li>
                         ))
                     ) : (

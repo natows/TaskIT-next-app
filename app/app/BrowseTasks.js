@@ -1,9 +1,11 @@
 "use client"
 import {useState, useEffect} from "react"
+import { useRouter } from "next/navigation";
 export default function BrowseTasks(){
     const [searchQuery, setSearchQuery] = useState("");
     const [filteredTasks ,setFilteredTasks] = useState([]);
     const [isVisible, setIsVisible] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const storedTasks = localStorage.getItem("tasksByDate");
@@ -30,7 +32,7 @@ export default function BrowseTasks(){
                         filteredTasks.map((task, index) => (
                             <li key={index} style={{ padding: "5px", cursor: "pointer" }} onClick={() => setSearchQuery(task.name)}>
                                 <div style={{display:"flex", justifyContent:"space-between"}}>
-                                    <span onClick={() => window.location.href=`/${task.date}`}>{task.name}</span>
+                                    <span onClick={() => router.push(`/${task.date}`)}>{task.name}</span>
                                     <span style={{color:"gray", }}>{task.date}</span>
                                 </div>
                                 
