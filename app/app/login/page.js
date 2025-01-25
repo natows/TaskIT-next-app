@@ -1,6 +1,6 @@
 "use client";
 import { useRef } from "react";
-import { logIn, currentUser } from "./user.js"; 
+import { logIn } from "./UserLogin.js";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -17,13 +17,16 @@ export default function LoginPage() {
             return;
         }
 
-        const user = logIn(login, password);
+        try {
+            const user = logIn(login, password);
 
-        if (user) {
-            localStorage.setItem("user", JSON.stringify(user));
-            router.push("/"); 
-        } else {
-            alert("Invalid login credentials");
+            if (user) {
+                router.push("/");
+            } else {
+                alert("Invalid login credentials");
+            }
+        } catch (error) {
+            alert(error.message);
         }
     }
 

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { currentUser } from "./login/user.js"; 
+import { currentUser } from "./login/UserLogin.js"; 
 
 export default function BrowseTasks() {
     const [searchQuery, setSearchQuery] = useState("");

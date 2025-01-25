@@ -2,7 +2,7 @@
 import Link from "next/link"
 import DoneTasks from "./DoneTasks"
 import TaskExportImport from "./dataFormatting/TaskExportImport"
-import {currentUser, logout} from "../login/user.js"
+import {currentUser, logout} from "../login/UserLogin.js"
 import {useState, useEffect} from "react"
 import { useRouter } from "next/navigation"
 

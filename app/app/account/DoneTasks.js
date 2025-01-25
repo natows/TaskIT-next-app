@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { currentUser } from "../login/UserLogin.js";
 
 export default function DoneTasks() {
     const [availableDates, setAvailableDates] = useState([]); 
@@ -7,52 +8,55 @@ export default function DoneTasks() {
     const [doneTasks, setDoneTasks] = useState([]); 
     const [isDisplayed, setIsDisplayed] = useState(false); 
 
-    const fetchAvailableDates = () => {
-        const storedTasks = localStorage.getItem("tasksByDate");
-        const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
-        const datesWithDoneTasks = Object.keys(parsedTasks).filter((date) => 
-            parsedTasks[date].tasks && 
-            parsedTasks[date].tasks.some((task) => task.done) 
-        );
-        setAvailableDates(datesWithDoneTasks);
-    };
+    const user = currentUser();
+    if (!user) {
+        return <p>Please log in to view done tasks.</p>;
+    }
 
-    
-    const getDoneTaskList = (date) => {
-        const storedTasks = localStorage.getItem("tasksByDate");
-        const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
-        if (parsedTasks[date]) {
-            const tasksForDate = parsedTasks[date].tasks || [];
-            const doneTasksForDate = tasksForDate.filter((task) => task.done); 
-            setDoneTasks(doneTasksForDate);
-        } else {
-            setDoneTasks([]);
-        }
-    };
+    const userId = user.userId; 
+
+    const parsedTasks = useMemo(() => {
+        const storedTasks = localStorage.getItem(userId);
+        return storedTasks ? JSON.parse(storedTasks).tasksByDate : {};
+    }, [userId]);
+
+    const datesWithDoneTasks = useMemo(() => {
+        return Object.keys(parsedTasks).filter((date) => 
+            parsedTasks[date]?.tasks?.some((task) => task.done)
+        );
+    }, [parsedTasks]);
+
+    useEffect(() => {
+        setAvailableDates(datesWithDoneTasks);
+    }, [datesWithDoneTasks]);
+
+    const getDoneTaskList = useMemo(() => {
+        if (!selectedDate) return [];
+        const tasksForDate = parsedTasks[selectedDate]?.tasks || [];
+        return tasksForDate.filter((task) => task.done); 
+    }, [parsedTasks, selectedDate]);
+
+    useEffect(() => {
+        setDoneTasks(getDoneTaskList);
+    }, [getDoneTaskList]);
 
     const handleDateChange = (event) => {
         const date = event.target.value; 
         setSelectedDate(date);
-        getDoneTaskList(date); 
         setIsDisplayed(true);
     };
 
     const removeTask = (taskToRemove) => {
-        const storedTasks = localStorage.getItem("tasksByDate");
-        const parsedTasks = storedTasks ? JSON.parse(storedTasks) : {};
+        const updatedTasks = parsedTasks[selectedDate]?.tasks.map((task) =>
+            task.name === taskToRemove.name ? { ...task, done: false } : task 
+        );
+
         if (parsedTasks[selectedDate]) {
-            const updatedTasks = parsedTasks[selectedDate].tasks.map((task) =>
-                task.name === taskToRemove.name ? { ...task, done: false } : task 
-            );
             parsedTasks[selectedDate].tasks = updatedTasks;
-            localStorage.setItem("tasksByDate", JSON.stringify(parsedTasks));
+            localStorage.setItem(userId, JSON.stringify({ tasksByDate: parsedTasks }));
             setDoneTasks(updatedTasks.filter((task) => task.done)); 
         }
     };
-
-    useEffect(() => {
-        fetchAvailableDates();
-    }, []);
 
     return (
         <div>
