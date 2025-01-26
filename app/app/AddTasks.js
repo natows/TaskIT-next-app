@@ -46,18 +46,20 @@ export default function AddTask() {
             return;
         }
 
-        const userId = user.userId; 
+        const userId = user.userId;
         const userTasks = localStorage.getItem(userId);
         const parsedUserTasks = userTasks ? JSON.parse(userTasks) : { tasksByDate: {} };
 
         parsedUserTasks.tasksByDate = parsedUserTasks.tasksByDate || {};
 
-        const formattedStartDate = values.startDate; 
+        const formattedStartDate = values.startDate;
 
         if (!parsedUserTasks.tasksByDate[formattedStartDate]) {
             parsedUserTasks.tasksByDate[formattedStartDate] = { tasks: [] };
         }
 
+        console.log('Parsed tasks:', parsedUserTasks);
+        
         parsedUserTasks.tasksByDate[formattedStartDate].tasks.push(newTask);
 
         localStorage.setItem(userId, JSON.stringify(parsedUserTasks));
@@ -68,8 +70,8 @@ export default function AddTask() {
     };
 
     return (
-        <div>
-            <h2>Add Task</h2>
+        <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-[300px] overflow-y-auto">
+            <h2 className="text-2xl font-semibold mb-4">Add Task</h2>
             <Formik
                 initialValues={{
                     taskName: "",
@@ -83,56 +85,62 @@ export default function AddTask() {
             >
                 {({ setFieldValue }) => (
                     <Form>
-                        <div>
-                            <label htmlFor="taskName">Task Name:</label>
+                        <div className="mb-4">
+                            <label htmlFor="taskName" className="block">Task Name:</label>
                             <Field
                                 type="text"
                                 id="taskName"
                                 name="taskName"
                                 placeholder="Enter task name"
+                                className="w-full p-2 border border-gray-300 rounded-md"
                             />
-                            <ErrorMessage name="taskName" component="div" />
+                            <ErrorMessage name="taskName" component="div" className="text-red-500 text-sm mt-1" />
                         </div>
 
-                        <div>
-                            <label htmlFor="startDate">Start Date:</label>
+                        <div className="mb-4">
+                            <label htmlFor="startDate" className="block">Start Date:</label>
                             <Field
                                 type="date"
                                 id="startDate"
                                 name="startDate"
+                                className="w-full p-2 border border-gray-300 rounded-md"
                             />
-                            <ErrorMessage name="startDate" component="div" />
+                            <ErrorMessage name="startDate" component="div" className="text-red-500 text-sm mt-1" />
                         </div>
 
-                        <div>
-                            <label htmlFor="endDate">End Date:</label>
+                        <div className="mb-4">
+                            <label htmlFor="endDate" className="block">End Date:</label>
                             <Field
                                 type="date"
                                 id="endDate"
                                 name="endDate"
+                                className="w-full p-2 border border-gray-300 rounded-md"
                             />
                         </div>
 
-                        <div>
-                            <label htmlFor="description">Description:</label>
+                        <div className="mb-4">
+                            <label htmlFor="description" className="block">Description:</label>
                             <Field
                                 as="textarea"
                                 id="description"
                                 name="description"
                                 placeholder="Enter task description"
+                                className="w-full p-2 border border-gray-300 rounded-md"
                             />
                         </div>
 
-                        <div>
-                            <label htmlFor="priority">Priority:</label>
-                            <Field as="select" id="priority" name="priority">
+                        <div className="mb-4">
+                            <label htmlFor="priority" className="block">Priority:</label>
+                            <Field as="select" id="priority" name="priority" className="w-full p-2 border border-gray-300 rounded-md">
                                 <option value="low">Low</option>
                                 <option value="normal">Normal</option>
                                 <option value="high">High</option>
                             </Field>
                         </div>
 
-                        <button type="submit">Add Task</button>
+                        <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-600 transition-colors">
+                            Add Task
+                        </button>
                     </Form>
                 )}
             </Formik>

@@ -11,26 +11,27 @@ export default function BrowseTasks() {
 
     useEffect(() => {
         const user = currentUser(); 
-        if (!user) return; 
-
+        if (!user) return;
+    
         const userId = user.userId; 
         const storedData = localStorage.getItem(userId);
-        const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
-
-        const allTasks = Object.entries(parsedData.tasksByDate || {}).flatMap(([date, data]) =>
-            data.tasks.map((task) => ({ ...task, date }))
+        const parsedData = storedData ? JSON.parse(storedData) : {};
+    
+        const allTasks = Object.entries(parsedData.tasksByDate || {}).flatMap(([date, taskData]) =>
+            taskData?.tasks ? taskData.tasks.map((task) => ({ ...task, date })) : []
         );
-
+    
         const filtered = allTasks.filter((task) =>
             task.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
-
+    
         setFilteredTasks(filtered);
         setIsVisible(searchQuery.length > 0);
     }, [searchQuery]);
+    
 
     return (
-        <div>
+        <div className="p-6 border border-gray-300 rounded-lg shadow-lg">
             <input
                 type="text"
                 placeholder="Browse tasks"

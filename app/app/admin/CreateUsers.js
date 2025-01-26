@@ -41,8 +41,12 @@ export default function CreateUser({ addUser }) {
 
         addUser(newUser); 
 
-        alert("User created successfully!");
     };
+    const handleKeyDown = () => {
+        if (event.key === "Enter") {
+            handleCreateUser()
+        }
+    }
 
     return (
         <div>
@@ -78,7 +82,8 @@ export default function CreateUser({ addUser }) {
                         name="role"
                         value="admin"
                         checked={role === "admin"}
-                        onChange={() => setRole("admin")}
+                        onChange={() => setRole("admin")
+                        }
                     />
                     Admin
                 </label>

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "tu bedzie jakas nazwa",
+  title: "TaskIt",
   description: "your TO-DO app",
 };
 
@@ -27,6 +27,7 @@ export default function RootLayout({ children }) {
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
           rel="stylesheet"
         />
+
 
         {children}
       </body>

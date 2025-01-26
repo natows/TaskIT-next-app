@@ -18,7 +18,8 @@ export default function AccountPage(){
     },[user])
 
     function userToNull(){
-    setUser(null)
+        setUser(null)
+        logout();
     }
     return(
         <div>

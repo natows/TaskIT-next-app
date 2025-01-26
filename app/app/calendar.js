@@ -1,5 +1,6 @@
+"use client";
 import { useState, useEffect } from 'react';
-import Link from "next/link"
+import Link from "next/link";
 
 export default function Calendar() {
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -61,46 +62,57 @@ export default function Calendar() {
         const emptyCells = [];
         const offset = firstDay === 0 ? 6 : firstDay - 1;
         for (let i = 0; i < offset; i++) {
-            emptyCells.push(<div className="empty-cell" key={`empty-${i}`} />);
+            emptyCells.push(<div className="w-full h-16 bg-transparent" key={`empty-${i}`} />);
         }
         return emptyCells;
     };
 
     return (
-        <div className="calendar-container">
-            <div className="calendar-header">
-                <button onClick={previousMonth}>Previous</button>
-                <select value={month} onChange={handleMonthChange}>
-                    {Array.from({ length: 12 }).map((_, index) => (
-                        <option value={index} key={index}>
-                            {new Date(0, index).toLocaleString('en-CA', { month: 'long' })}
-                        </option>
-                    ))}
-                </select>
-                <input
-                    type="number"
-                    value={year}
-                    onChange={handleYearChange}
-                    style={{ width: '80px' }}
-                />
-                <button onClick={nextMonth}>Next</button>
-                <button onClick={initialDate}>Current date</button>
+        <div className="bg-white rounded-lg shadow-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+                <button onClick={previousMonth} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
+                    Previous
+                </button>
+                <div className="flex items-center space-x-4">
+                    <select value={month} onChange={handleMonthChange} className="border rounded-md p-2">
+                        {Array.from({ length: 12 }).map((_, index) => (
+                            <option value={index} key={index}>
+                                {new Date(0, index).toLocaleString('en-CA', { month: 'long' })}
+                            </option>
+                        ))}
+                    </select>
+                    <input
+                        type="number"
+                        value={year}
+                        onChange={handleYearChange}
+                        className="border rounded-md p-2 w-20"
+                    />
+                </div>
+                <button onClick={nextMonth} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
+                    Next
+                </button>
+                <button onClick={initialDate} className="text-blue-500 font-bold hover:underline">
+                    Current Date
+                </button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "5px" }}>
+            
+            <div className="grid grid-cols-7 gap-2 text-center font-semibold mb-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                    <div className="weekday" key={index}>{day}</div>
+                    <div key={index} className="text-gray-700">{day}</div>
                 ))}
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "5px" }}
-            >
+
+            <div className="grid grid-cols-7 gap-2">
                 {generateEmptyCells()}
                 {daysInMonth.map((day) => {
                     const selectedDate = new Date(year, month, day); 
                     const formattedDate = selectedDate.toLocaleDateString('en-CA'); 
 
                     return (
-                        <Link href={`/${formattedDate}`} className="calendar-day" key={day}>
-                            {day}
+                        <Link href={`/${formattedDate}`} key={day}>
+                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-blue-200 hover:bg-blue-300 cursor-pointer transition">
+                                <span className="text-gray-700">{day}</span>
+                            </div>
                         </Link>
                     );
                 })}

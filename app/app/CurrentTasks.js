@@ -47,39 +47,42 @@ export default function CurrentTasks() {
     };
 
     return (
-        <div>
-            <p>Today's Tasks</p>
-            {todaysTasks.length > 0 ? (
-                <ul>
-                    {todaysTasks.map((task, index) => (
-                        <li key={index}>{task.name}</li>
-                    ))}
-                </ul>
-            ) : (
-                <p>Bummer! You have no tasks for today</p>
-            )}
-            {doneTasks.length > 0 && (
-                <>
-                    <p>Completed Tasks for Today:</p>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 border border-gray-300rounded-lg shadow-lg h-64 overflow-y-auto">
+                <p className="text-xl font-semibold mb-4">Today's Tasks</p>
+                {todaysTasks.length > 0 ? (
                     <ul>
-                        {doneTasks.map((task, index) => (
-                            <li key={index} style={{ textDecoration: "line-through" }}>
-                                {task.name}
-                            </li>
+                        {todaysTasks.map((task, index) => (
+                            <li key={index} className="mb-2">{task.name}</li>
                         ))}
                     </ul>
-                </>
-            )}
-            <p>Tomorrow's Tasks</p>
-            {tommorowsTasks.length > 0 ? (
-                <ul>
-                    {tommorowsTasks.map((task, index) => (
-                        <li key={index}>{task.name}</li>
-                    ))}
-                </ul>
-            ) : (
-                <p>A chill day! You have no tasks for tomorrow</p>
-            )}
+                ) : (
+                    <p>Bummer! You have no tasks for today</p>
+                )}
+                {doneTasks.length > 0 && (
+                    <>
+                        <p className="font-semibold mt-4">Completed Tasks for Today:</p>
+                        <ul>
+                            {doneTasks.map((task, index) => (
+                                <li key={index} className="mb-2 text-gray-500 line-through">{task.name}</li>
+                            ))}
+                        </ul>
+                    </>
+                )}
+            </div>
+
+            <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-64 overflow-y-auto">
+                <p className="text-xl font-semibold mb-4">Tomorrow's Tasks</p>
+                {tommorowsTasks.length > 0 ? (
+                    <ul>
+                        {tommorowsTasks.map((task, index) => (
+                            <li key={index} className="mb-2">{task.name}</li>
+                        ))}
+                    </ul>
+                ) : (
+                    <p>A chill day! You have no tasks for tomorrow</p>
+                )}
+            </div>
         </div>
     );
 }
