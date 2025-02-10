@@ -20,6 +20,9 @@ export default function AddTask() {
         if (!values.startDate) {
             errors.startDate = "Please enter a start date.";
         }
+        if (!values.endDate) {
+            errors.endDate = "Please enter an end date.";
+        }
         return errors;
     };
 
@@ -52,15 +55,18 @@ export default function AddTask() {
 
         parsedUserTasks.tasksByDate = parsedUserTasks.tasksByDate || {};
 
-        const formattedStartDate = values.startDate;
+        const startDate = new Date(values.startDate);
+        const endDate = new Date(values.endDate);
 
-        if (!parsedUserTasks.tasksByDate[formattedStartDate]) {
-            parsedUserTasks.tasksByDate[formattedStartDate] = { tasks: [] };
+        for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+            const formattedDate = date.toISOString().split('T')[0];
+
+            if (!parsedUserTasks.tasksByDate[formattedDate]) {
+                parsedUserTasks.tasksByDate[formattedDate] = { tasks: [] };
+            }
+
+            parsedUserTasks.tasksByDate[formattedDate].tasks.push(newTask);
         }
-
-        console.log('Parsed tasks:', parsedUserTasks);
-        
-        parsedUserTasks.tasksByDate[formattedStartDate].tasks.push(newTask);
 
         localStorage.setItem(userId, JSON.stringify(parsedUserTasks));
 
@@ -116,6 +122,7 @@ export default function AddTask() {
                                 name="endDate"
                                 className="w-full p-2 border border-gray-300 rounded-md"
                             />
+                            <ErrorMessage name="endDate" component="div" className="text-red-500 text-sm mt-1" />
                         </div>
 
                         <div className="mb-4">

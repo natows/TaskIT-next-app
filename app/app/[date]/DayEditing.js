@@ -1,10 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { currentUser } from "../login/UserLogin.js"; 
+import { currentUser } from "../login/UserLogin.js";
 
 export default function DayEditing() {
-    const { date } = useParams(); 
+    const { date } = useParams();
     const [taskList, setTaskList] = useState([]);
     const [newTask, setNewTask] = useState("");
     const [editTaskIndex, setEditTaskIndex] = useState(null);
@@ -13,14 +13,12 @@ export default function DayEditing() {
     const [showDescriptions, setShowDescriptions] = useState({});
     const [isHydrated, setIsHydrated] = useState(false);
 
-
     const user = currentUser();
     if (!user) {
         return <p>Please log in to manage tasks.</p>;
     }
-    const userId = user.userId; 
+    const userId = user.userId;
 
-    
     useEffect(() => {
         const storedData = localStorage.getItem(userId);
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
@@ -32,7 +30,6 @@ export default function DayEditing() {
         setIsHydrated(true);
     }, [date, userId]);
 
-    
     useEffect(() => {
         if (isHydrated) {
             const storedData = localStorage.getItem(userId);
@@ -68,8 +65,8 @@ export default function DayEditing() {
     const removeTask = (index) => {
         const updatedList = taskList.filter((_, i) => i !== index);
         setTaskList(updatedList);
-        if (taskList.length === 0){
-            const storedData = localStorage.getItem(userId);    
+        if (taskList.length === 0) {
+            const storedData = localStorage.getItem(userId);
             const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
             delete parsedData.tasksByDate[date];
@@ -127,110 +124,85 @@ export default function DayEditing() {
     }
 
     return (
-        <div>
-            <h2>Tasks for {date}</h2>
-            <input
-                type="text"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                placeholder="New task"
-                onKeyDown={(e) => handleKeyDown(e, 1)}
-            />
-            <button onClick={addTask}>Add task</button>
-            <h3>Task List</h3>
+        <div className="p-4">
+            <h2 className="text-2xl font-bold mb-4">Tasks for {date}</h2>
+            <div className="flex mb-4">
+                <input
+                    type="text"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    placeholder="New task"
+                    onKeyDown={(e) => handleKeyDown(e, 1)}
+                    className="border rounded p-2 flex-grow mr-2"
+                />
+                <button onClick={addTask} className="bg-blue-500 text-white py-2 px-4 rounded">Add task</button>
+            </div>
+            <h3 className="text-xl font-semibold mb-2">Task List</h3>
             <ul>
                 {taskList.map((task, index) => (
-                    <li key={index} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <li key={index} className="flex justify-between items-center mb-2 p-2 border rounded">
                         {editTaskIndex === index ? (
-                            <div>
+                            <div className="flex items-center">
                                 <input
                                     type="text"
                                     value={editedTask}
                                     onChange={(e) => setEditedTask(e.target.value)}
                                     onKeyDown={(e) => handleKeyDown(e, 2)}
+                                    className="border rounded p-2 mr-2"
                                 />
-                                <button onClick={updateTask}>Update</button>
+                                <button onClick={updateTask} className="bg-green-500 text-white py-1 px-3 rounded">Update</button>
                             </div>
                         ) : (
-                            <div style={{ display: "flex", alignItems: "center" }}>
+                            <div className="flex items-center">
                                 <button
-                                    style={{
-                                        borderRadius: "50%",
-                                        width: "20px",
-                                        height: "20px",
-                                        backgroundColor: "pink",
-                                        marginRight: "10px",
-                                    }}
+                                    className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center mr-2"
                                     onClick={() => removeTask(index)}
                                 >
                                     -
                                 </button>
-                                <span>{task.name}</span>
-                                <button onClick={() => handleEditTask(task, index)} style={{ marginLeft: "10px" }}>
-                                    Edit
-                                </button>
+                                <span className="flex-grow">{task.name}</span>
+                                <button onClick={() => handleEditTask(task, index)} className="bg-yellow-500 text-white py-1 px-3 rounded mr-2">Edit</button>
                                 {task.done ? (
                                     <button
-                                        style={{ color: "green", marginLeft: "10px" }}
+                                        className="text-green-500 mr-2"
                                         onClick={() => toggleTaskStatus(task)}
                                     >
                                         &#10004;
                                     </button>
                                 ) : (
-                                    <button onClick={() => toggleTaskStatus(task)}>Mark as done</button>
+                                    <button onClick={() => toggleTaskStatus(task)} className="bg-gray-300 text-black py-1 px-3 rounded mr-2">Mark as done</button>
                                 )}
                                 <button
                                     onClick={() => toggleDescriptionVisibility(index)}
-                                    style={{ marginLeft: "10px" }}
+                                    className="bg-blue-500 text-white py-1 px-3 rounded mr-2"
                                 >
                                     {showDescriptions[index] ? "Hide Description" : "Show Description"}
                                 </button>
                                 {showDescriptions[index] && (
-                                    <div>
-                                        <p>{task.description || "No description yet"}</p>
+                                    <div className="ml-4">
+                                        <p className="mb-2">{task.description || "No description yet"}</p>
                                         <input
                                             type="text"
                                             placeholder="Add description"
                                             value={descriptionInput}
                                             onChange={(e) => setDescriptionInput(e.target.value)}
+                                            className="border rounded p-2 mr-2"
                                         />
-                                        <button onClick={() => addDescription(index)}>Save</button>
+                                        <button onClick={() => addDescription(index)} className="bg-green-500 text-white py-1 px-3 rounded">Save</button>
                                     </div>
                                 )}
-
-                                <div style={{ display: "flex", gap: "10px", marginLeft: "10px" }}>
+                                <div className="flex gap-2 ml-4">
                                     <button
                                         onClick={() => handlePrioritySet(index, "low")}
-                                        style={{
-                                            width: "15px",
-                                            height: "15px",
-                                            borderRadius: "50%",
-                                            backgroundColor: task.priority === "low" ? "yellow" : "#fdf9b1",
-                                            textAlign: "center",
-                                            lineHeight: "20px",
-                                        }}
+                                        className={`w-4 h-4 rounded-full ${task.priority === "low" ? "bg-yellow-500" : "bg-yellow-200"}`}
                                     ></button>
                                     <button
                                         onClick={() => handlePrioritySet(index, "normal")}
-                                        style={{
-                                            width: "15px",
-                                            height: "15px",
-                                            borderRadius: "50%",
-                                            backgroundColor: task.priority === "normal" ? "#6ffd2a" : "#c3fdb1",
-                                            textAlign: "center",
-                                            lineHeight: "20px",
-                                        }}
+                                        className={`w-4 h-4 rounded-full ${task.priority === "normal" ? "bg-green-500" : "bg-green-200"}`}
                                     ></button>
                                     <button
                                         onClick={() => handlePrioritySet(index, "high")}
-                                        style={{
-                                            width: "15px",
-                                            height: "15px",
-                                            borderRadius: "50%",
-                                            backgroundColor: task.priority === "high" ? "#fe623e" : "#fdbfb1",
-                                            textAlign: "center",
-                                            lineHeight: "20px",
-                                        }}
+                                        className={`w-4 h-4 rounded-full ${task.priority === "high" ? "bg-red-500" : "bg-red-200"}`}
                                     ></button>
                                 </div>
                             </div>

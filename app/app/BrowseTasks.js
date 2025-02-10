@@ -22,7 +22,8 @@ export default function BrowseTasks() {
         );
     
         const filtered = allTasks.filter((task) =>
-            task.name.toLowerCase().includes(searchQuery.toLowerCase())
+            task.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            task.date.includes(searchQuery)
         );
     
         setFilteredTasks(filtered);
@@ -37,34 +38,29 @@ export default function BrowseTasks() {
                 placeholder="Browse tasks"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md"
             />
             {isVisible && (
                 <ul
-                    style={{
-                        border: "1px solid #ccc",
-                        maxHeight: "200px",
-                        overflowY: "auto",
-                        padding: "0",
-                        margin: "5px 0",
-                    }}
+                    className="border border-gray-300 max-h-48 overflow-y-auto p-0 mt-2"
                 >
                     {filteredTasks.length > 0 ? (
                         filteredTasks.map((task, index) => (
                             <li
                                 key={index}
-                                style={{ padding: "5px", cursor: "pointer" }}
+                                className="p-2 cursor-pointer hover:bg-gray-100"
                                 onClick={() => setSearchQuery(task.name)}
                             >
-                                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                                <div className="flex justify-between">
                                     <span onClick={() => router.push(`/${task.date}`)}>
                                         {task.name}
                                     </span>
-                                    <span style={{ color: "gray" }}>{task.date}</span>
+                                    <span className="text-gray-500">{task.date}</span>
                                 </div>
                             </li>
                         ))
                     ) : (
-                        <p style={{ padding: "5px" }}>No tasks found</p>
+                        <p className="p-2">No tasks found</p>
                     )}
                 </ul>
             )}

@@ -1,11 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { currentUser } from "./login/UserLogin.js"; 
 
 export default function CurrentTasks() {
     const [todaysTasks, setTodaysTasks] = useState([]);
     const [doneTasks, setDoneTasks] = useState([]);
-    const [tommorowsTasks, setTommorowsTasks] = useState([]);
+    const [tomorrowsTasks, setTomorrowsTasks] = useState([]);
+    const [doneTomorrowsTasks, setDoneTomorrowsTasks] = useState([]);
+    const [refresh, setRefresh] = useState(false); // State to trigger re-fetch
+    const router = useRouter();
 
     useEffect(() => {
         const user = currentUser(); 
@@ -13,11 +17,11 @@ export default function CurrentTasks() {
 
         const userId = user.userId;
         const todaysDate = formatDate(new Date());
-        const tommorowsDate = formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
+        const tomorrowsDate = formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000));
 
-        getTasks(userId, todaysDate, setTodaysTasks);
-        getTasks(userId, tommorowsDate, setTommorowsTasks);
-    }, []);
+        getTasks(userId, todaysDate, setTodaysTasks, setDoneTasks);
+        getTasks(userId, tomorrowsDate, setTomorrowsTasks, setDoneTomorrowsTasks);
+    }, [refresh]); // Add refresh as a dependency
 
     const formatDate = (date) => {
         const year = date.getFullYear();
@@ -26,34 +30,69 @@ export default function CurrentTasks() {
         return `${year}-${month}-${day}`;
     };
 
-    const getTasks = (userId, date, setTasks) => {
+    const getTasks = (userId, date, setTasks, setDoneTasks) => {
         const storedData = localStorage.getItem(userId); 
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
         if (parsedData.tasksByDate[date]) {
             const allTasks = parsedData.tasksByDate[date].tasks || [];
-            setTasks(allTasks);
-
-            if (date === formatDate(new Date())) { 
-                const completed = allTasks.filter((task) => task.done);
-                setDoneTasks(completed);
-            }
+            setTasks(allTasks.filter(task => !task.done));
+            setDoneTasks(allTasks.filter(task => task.done));
         } else {
             setTasks([]);
-            if (date === formatDate(new Date())) {
-                setDoneTasks([]);
-            }
+            setDoneTasks([]);
         }
+    };
+
+    const toggleTaskStatus = (task, date) => {
+        const user = currentUser();
+        if (!user) return;
+
+        const userId = user.userId;
+        const storedData = localStorage.getItem(userId);
+        const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
+
+        const updatedTasks = parsedData.tasksByDate[date].tasks.map((t) =>
+            t.name === task.name ? { ...t, done: !t.done } : t
+        );
+
+        parsedData.tasksByDate[date].tasks = updatedTasks;
+        localStorage.setItem(userId, JSON.stringify(parsedData));
+
+        if (date === formatDate(new Date())) {
+            setTodaysTasks(updatedTasks.filter(task => !task.done));
+            setDoneTasks(updatedTasks.filter(task => task.done));
+        } else {
+            setTomorrowsTasks(updatedTasks.filter(task => !task.done));
+            setDoneTomorrowsTasks(updatedTasks.filter(task => task.done));
+        }
+
+        setRefresh(!refresh); 
+    };
+
+    const handleTaskClick = (date) => {
+        router.push(`/${date}`);
     };
 
     return (
         <div className="grid grid-cols-2 gap-4">
-            <div className="p-6 border border-gray-300rounded-lg shadow-lg h-64 overflow-y-auto">
-                <p className="text-xl font-semibold mb-4">Today's Tasks</p>
+            <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-64 overflow-y-auto">
+                <p className="text-xl font-semibold mb-4 cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date()))}>
+                    Today's Tasks
+                </p>
                 {todaysTasks.length > 0 ? (
                     <ul>
                         {todaysTasks.map((task, index) => (
-                            <li key={index} className="mb-2">{task.name}</li>
+                            <li key={index} className="mb-2 flex justify-between items-center">
+                                <span className="cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date()))}>
+                                    {task.name}
+                                </span>
+                                <input
+                                    type="checkbox"
+                                    checked={task.done}
+                                    onChange={() => toggleTaskStatus(task, formatDate(new Date()))}
+                                />
+                            </li>
                         ))}
                     </ul>
                 ) : (
@@ -64,7 +103,16 @@ export default function CurrentTasks() {
                         <p className="font-semibold mt-4">Completed Tasks for Today:</p>
                         <ul>
                             {doneTasks.map((task, index) => (
-                                <li key={index} className="mb-2 text-gray-500 line-through">{task.name}</li>
+                                <li key={index} className="mb-2 text-gray-500 line-through flex justify-between items-center">
+                                    <span className="cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date()))}>
+                                        {task.name}
+                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        checked={task.done}
+                                        onChange={() => toggleTaskStatus(task, formatDate(new Date()))}
+                                    />
+                                </li>
                             ))}
                         </ul>
                     </>
@@ -72,15 +120,45 @@ export default function CurrentTasks() {
             </div>
 
             <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-64 overflow-y-auto">
-                <p className="text-xl font-semibold mb-4">Tomorrow's Tasks</p>
-                {tommorowsTasks.length > 0 ? (
+                <p className="text-xl font-semibold mb-4 cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000)))}>
+                    Tomorrow's Tasks
+                </p>
+                {tomorrowsTasks.length > 0 ? (
                     <ul>
-                        {tommorowsTasks.map((task, index) => (
-                            <li key={index} className="mb-2">{task.name}</li>
+                        {tomorrowsTasks.map((task, index) => (
+                            <li key={index} className="mb-2 flex justify-between items-center">
+                                <span className="cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000)))}>
+                                    {task.name}
+                                </span>
+                                <input
+                                    type="checkbox"
+                                    checked={task.done}
+                                    onChange={() => toggleTaskStatus(task, formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000)))}
+                                />
+                            </li>
                         ))}
                     </ul>
                 ) : (
                     <p>A chill day! You have no tasks for tomorrow</p>
+                )}
+                {doneTomorrowsTasks.length > 0 && (
+                    <>
+                        <p className="font-semibold mt-4">Completed Tasks for Tomorrow:</p>
+                        <ul>
+                            {doneTomorrowsTasks.map((task, index) => (
+                                <li key={index} className="mb-2 text-gray-500 line-through flex justify-between items-center">
+                                    <span className="cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000)))}>
+                                        {task.name}
+                                    </span>
+                                    <input
+                                        type="checkbox"
+                                        checked={task.done}
+                                        onChange={() => toggleTaskStatus(task, formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000)))}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                    </>
                 )}
             </div>
         </div>

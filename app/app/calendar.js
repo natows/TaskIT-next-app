@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from "next/link";
 
 export default function Calendar() {
@@ -45,12 +45,14 @@ export default function Calendar() {
         setCurrentDate(newDate);
     };
 
-    const initialDate = () => {
-        const now = new Date();
-        setMonth(now.getMonth());
-        setYear(now.getFullYear());
-        setCurrentDate(now);
-    };
+    const initialDate = useMemo(() => {
+        return () => {
+            const now = new Date();
+            setMonth(now.getMonth());
+            setYear(now.getFullYear());
+            setCurrentDate(now);
+        };
+    }, []);
 
     const getFirstDayOfMonth = () => {
         const firstDay = new Date(year, month, 1);
