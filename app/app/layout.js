@@ -1,10 +1,11 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import '@fortawesome/fontawesome-free/css/all.min.css'; 
 import { UserProvider } from './login/UserContext';
 import { ThemeProvider } from './ThemeContext';
+import { NotificationProvider } from './NotificationContext';
 import Navigation from './Navigation';
-
-
+import Notifications from './Notifications';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,10 +28,13 @@ export default function RootLayout({ children }) {
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <ThemeProvider>
                     <UserProvider>
-                        <Navigation />
-                        <div className="p-4">
-                            {children}
-                        </div>
+                        <NotificationProvider>
+                            <Navigation />
+                            <Notifications />
+                            <div className="p-4">
+                                {children}
+                            </div>
+                        </NotificationProvider>
                     </UserProvider>
                 </ThemeProvider>
             </body>

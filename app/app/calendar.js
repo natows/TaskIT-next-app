@@ -70,8 +70,8 @@ export default function Calendar() {
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-lg p-6">
-            <div className="flex justify-between items-center mb-4">
+        <div className="calendar-dark bg-white rounded-lg shadow-lg p-6">
+            <div className="calendar-header flex justify-between items-center mb-4">
                 <button onClick={previousMonth} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
                     Previous
                 </button>
@@ -93,14 +93,14 @@ export default function Calendar() {
                 <button onClick={nextMonth} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
                     Next
                 </button>
-                <button onClick={initialDate} className="text-blue-500 font-bold hover:underline">
+                <button onClick={initialDate} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
                     Current Date
                 </button>
             </div>
             
-            <div className="grid grid-cols-7 gap-2 text-center font-semibold mb-2">
+            <div className="calendar-days grid grid-cols-7 gap-2 text-center font-semibold mb-2">
                 {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, index) => (
-                    <div key={index} className="text-gray-700">{day}</div>
+                    <div key={index} >{day}</div>
                 ))}
             </div>
 
@@ -112,8 +112,8 @@ export default function Calendar() {
 
                     return (
                         <Link href={`/${formattedDate}`} key={day}>
-                            <div className="flex items-center justify-center w-14 h-14 rounded-full bg-blue-200 hover:bg-blue-300 cursor-pointer transition">
-                                <span className="text-gray-700">{day}</span>
+                            <div className="calendar-day flex items-center justify-center w-14 h-14 rounded-full bg-blue-200 hover:bg-blue-300 cursor-pointer transition">
+                                <span >{day}</span>
                             </div>
                         </Link>
                     );

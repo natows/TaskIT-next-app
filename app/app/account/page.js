@@ -1,33 +1,19 @@
-"use client"
-import Link from "next/link"
-import DoneTasks from "./DoneTasks"
-import TaskExportImport from "./dataFormatting/TaskExportImport"
-import {currentUser, logout} from "../login/UserLogin.js"
-import {useState, useEffect} from "react"
-import { useRouter } from "next/navigation"
+"use client";
+import DoneTasks from "./DoneTasks";
+import TaskExportImport from "./dataFormatting/TaskExportImport";
 
-
-export default function AccountPage(){
-    const initialUser = currentUser();
-    const [user, setUser] = useState(initialUser);
-    const router = useRouter();
-    useEffect(() => {
-    if (user === null) {
-        router.push("/")
-    }
-    },[user])
-
-    function userToNull(){
-        setUser(null)
-        logout();
-    }
-    return(
-        <div>
-        {/* <button onClick={userToNull}>Log out</button>
-        <Link href="account/settings">Settings</Link> */}
-        <DoneTasks />
-        <TaskExportImport />
+export default function AccountPage() {
+    return (
+        <div className="container mx-auto p-6">
+            <div className="card bg-white shadow-md rounded-lg p-6 mb-6">
+                <h1 className="text-3xl font-bold mb-4">Account Overview</h1>
+                <DoneTasks />
+            </div>
+            <div className="card bg-white shadow-md rounded-lg p-6">
+                <h2 className="text-2xl font-semibold mb-4">Export/Import Tasks</h2>
+                <TaskExportImport />
+            </div>
         </div>
-    )
+    );
 }
 

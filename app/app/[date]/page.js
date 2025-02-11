@@ -27,6 +27,10 @@ export default function DayPage({ params }) {
         router.push(`/${selectedDate}`);
     };
 
+    if (!user) {
+        return <p>Please log in to view and manage tasks.</p>;
+    }
+
     return (
         <div>
             <div className="flex justify-between items-center mb-4">

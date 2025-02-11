@@ -7,7 +7,7 @@ export default function ThemeSwitcher() {
 
     return (
         <button onClick={toggleTheme} className="bg-primary text-white py-1 px-4 rounded">
-            {theme === "light" ? "Dark theme" : "Light theme"}
+            {theme === "light" ? <i className="fa-solid fa-moon"></i> : <i className="fa-solid fa-sun"></i>}
         </button>
     );
 }
