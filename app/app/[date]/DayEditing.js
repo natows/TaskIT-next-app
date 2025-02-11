@@ -1,10 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useParams } from "next/navigation";
-import { currentUser } from "../login/UserLogin.js";
+import { UserContext } from "../login/UserContext";
 
 export default function DayEditing() {
     const { date } = useParams();
+    const { user } = useContext(UserContext);
     const [taskList, setTaskList] = useState([]);
     const [newTask, setNewTask] = useState("");
     const [editTaskIndex, setEditTaskIndex] = useState(null);
@@ -13,13 +14,10 @@ export default function DayEditing() {
     const [showDescriptions, setShowDescriptions] = useState({});
     const [isHydrated, setIsHydrated] = useState(false);
 
-    const user = currentUser();
-    if (!user) {
-        return <p>Please log in to manage tasks.</p>;
-    }
-    const userId = user.userId;
-
     useEffect(() => {
+        if (!user) return;
+
+        const userId = user.userId;
         const storedData = localStorage.getItem(userId);
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
@@ -28,17 +26,18 @@ export default function DayEditing() {
         }
 
         setIsHydrated(true);
-    }, [date, userId]);
+    }, [date, user]);
 
     useEffect(() => {
-        if (isHydrated) {
-            const storedData = localStorage.getItem(userId);
-            const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
+        if (!user || !isHydrated) return;
 
-            parsedData.tasksByDate[date] = { tasks: taskList };
-            localStorage.setItem(userId, JSON.stringify(parsedData));
-        }
-    }, [taskList, isHydrated, date, userId]);
+        const userId = user.userId;
+        const storedData = localStorage.getItem(userId);
+        const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
+
+        parsedData.tasksByDate[date] = { tasks: taskList };
+        localStorage.setItem(userId, JSON.stringify(parsedData));
+    }, [taskList, isHydrated, date, user]);
 
     const addTask = () => {
         if (newTask.trim() !== "") {
@@ -66,6 +65,7 @@ export default function DayEditing() {
         const updatedList = taskList.filter((_, i) => i !== index);
         setTaskList(updatedList);
         if (taskList.length === 0) {
+            const userId = user.userId;
             const storedData = localStorage.getItem(userId);
             const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
@@ -118,6 +118,10 @@ export default function DayEditing() {
         updatedList[index] = { ...updatedList[index], priority: level };
         setTaskList(updatedList);
     };
+
+    if (!user) {
+        return <p>Please log in to manage tasks.</p>;
+    }
 
     if (!isHydrated) {
         return null;

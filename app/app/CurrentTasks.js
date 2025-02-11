@@ -1,19 +1,19 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
-import { currentUser } from "./login/UserLogin.js"; 
+import { UserContext } from "./login/UserContext";
 
 export default function CurrentTasks() {
+    const { user } = useContext(UserContext);
     const [todaysTasks, setTodaysTasks] = useState([]);
     const [doneTasks, setDoneTasks] = useState([]);
     const [tomorrowsTasks, setTomorrowsTasks] = useState([]);
     const [doneTomorrowsTasks, setDoneTomorrowsTasks] = useState([]);
-    const [refresh, setRefresh] = useState(false); // State to trigger re-fetch
+    const [refresh, setRefresh] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
-        const user = currentUser(); 
-        if (!user) return; 
+        if (!user) return;
 
         const userId = user.userId;
         const todaysDate = formatDate(new Date());
@@ -21,17 +21,17 @@ export default function CurrentTasks() {
 
         getTasks(userId, todaysDate, setTodaysTasks, setDoneTasks);
         getTasks(userId, tomorrowsDate, setTomorrowsTasks, setDoneTomorrowsTasks);
-    }, [refresh]); // Add refresh as a dependency
+    }, [refresh, user]);
 
     const formatDate = (date) => {
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0"); 
+        const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
     };
 
     const getTasks = (userId, date, setTasks, setDoneTasks) => {
-        const storedData = localStorage.getItem(userId); 
+        const storedData = localStorage.getItem(userId);
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
         if (parsedData.tasksByDate[date]) {
@@ -45,7 +45,6 @@ export default function CurrentTasks() {
     };
 
     const toggleTaskStatus = (task, date) => {
-        const user = currentUser();
         if (!user) return;
 
         const userId = user.userId;
@@ -67,7 +66,7 @@ export default function CurrentTasks() {
             setDoneTomorrowsTasks(updatedTasks.filter(task => task.done));
         }
 
-        setRefresh(!refresh); 
+        setRefresh(!refresh);
     };
 
     const handleTaskClick = (date) => {

@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { UserProvider } from "./login/UserLogin";
+import { UserProvider } from './login/UserContext';
+import Navigation from './Navigation';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,19 +19,17 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
-  return (
-    <html lang="en">
-      <body
-        // className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <link
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-          rel="stylesheet"
-        />
-
-
-        {children}
-      </body>
-    </html>
-  );
+    return (
+        <html lang="en">
+            <body className={`${geistSans.variable} ${geistMono.variable}`}>
+                <UserProvider>
+                    <Navigation />
+                    <div className="p-4">
+                        {children}
+                    </div>
+                </UserProvider>
+            </body>
+        </html>
+    );
 }
+

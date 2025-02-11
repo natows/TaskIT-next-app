@@ -1,33 +1,24 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Formik, Field, Form, ErrorMessage } from "formik";
+import * as Yup from "yup";
+import { UserContext } from "./login/UserContext";
 
 export default function AddTask() {
-    const [currentUser, setCurrentUser] = useState(null);
+    const { user } = useContext(UserContext);
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            setCurrentUser(JSON.parse(storedUser));
-        }
-    }, []);
-
-    const validate = (values) => {
-        const errors = {};
-        if (!values.taskName) {
-            errors.taskName = "Please enter a task name.";
-        }
-        if (!values.startDate) {
-            errors.startDate = "Please enter a start date.";
-        }
-        if (!values.endDate) {
-            errors.endDate = "Please enter an end date.";
-        }
-        return errors;
-    };
+    const validationSchema = Yup.object().shape({
+        taskName: Yup.string().required("Please enter a task name."),
+        startDate: Yup.date().required("Please enter a start date."),
+        endDate: Yup.date()
+            .required("Please enter an end date.")
+            .min(Yup.ref('startDate'), "End date can't be before start date."),
+        priority: Yup.string().required("Please select a priority."),
+        description: Yup.string(),
+    });
 
     const handleSubmit = (values, { resetForm }) => {
-        if (!currentUser) {
+        if (!user) {
             alert("No user is logged in.");
             return;
         }
@@ -42,14 +33,14 @@ export default function AddTask() {
         const storedUsers = localStorage.getItem("users");
         const parsedUsers = storedUsers ? JSON.parse(storedUsers) : {};
 
-        const user = parsedUsers[currentUser.username];
+        const currentUser = parsedUsers[user.username];
 
-        if (!user) {
+        if (!currentUser) {
             alert("User data not found.");
             return;
         }
 
-        const userId = user.userId;
+        const userId = currentUser.userId;
         const userTasks = localStorage.getItem(userId);
         const parsedUserTasks = userTasks ? JSON.parse(userTasks) : { tasksByDate: {} };
 
@@ -86,7 +77,7 @@ export default function AddTask() {
                     priority: "normal",
                     description: "",
                 }}
-                validate={validate}
+                validationSchema={validationSchema}
                 onSubmit={handleSubmit}
             >
                 {({ setFieldValue }) => (

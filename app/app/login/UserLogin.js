@@ -2,13 +2,11 @@ export function logIn(login, password) {
     const users = JSON.parse(localStorage.getItem("users")) || {}; 
 
     if (users[login]) {
-        const storedPassword = users[login].password;
-        
-        if (storedPassword === password) {
+        if (users[login].password === password) {
             const currentUserData = {
                 userId: users[login].userId,
                 username: login,
-                isAdmin: users[login].role === "admin", 
+                isAdmin: users[login].role === "admin",
             };
 
             localStorage.setItem("user", JSON.stringify(currentUserData));
@@ -22,7 +20,7 @@ export function logIn(login, password) {
             userId: newUserId,
             username: login,
             password: password,
-            role: "regular",  
+            role: "regular",
         };
 
         users[login] = newUser;
@@ -33,7 +31,7 @@ export function logIn(login, password) {
         const currentUserData = {
             userId: newUserId,
             username: login,
-            isAdmin: false,  
+            isAdmin: false,
         };
 
         localStorage.setItem("user", JSON.stringify(currentUserData));
@@ -43,12 +41,10 @@ export function logIn(login, password) {
 
 export function currentUser() {
     const userData = localStorage.getItem("user");
-    if (!userData) {
-        return null;
-    }
-    return JSON.parse(userData);
+    return userData ? JSON.parse(userData) : null;
 }
 
 export function logout() {
     localStorage.removeItem("user");
+    window.dispatchEvent(new Event("storage")); 
 }

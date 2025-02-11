@@ -1,12 +1,13 @@
 "use client";
-import { useRef } from "react";
-import { logIn } from "./UserLogin.js";
+import { useRef, useContext } from "react";
 import { useRouter } from "next/navigation";
+import { UserContext } from "./UserContext"; 
 
 export default function LoginPage() {
     const router = useRouter();
     const loginPrompt = useRef();
     const passwordPrompt = useRef();
+    const { handleLogin } = useContext(UserContext); 
 
     function loginOnClick() {
         const login = loginPrompt.current.value.trim();
@@ -18,13 +19,8 @@ export default function LoginPage() {
         }
 
         try {
-            const user = logIn(login, password);
-
-            if (user) {
-                router.push("/");
-            } else {
-                alert("Invalid login credentials");
-            }
+            handleLogin(login, password); 
+            router.push("/");
         } catch (error) {
             alert(error.message);
         }

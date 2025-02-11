@@ -1,14 +1,16 @@
 "use client";
-import { currentUser } from "../../login/UserLogin.js"; 
+import { useContext } from "react";
+import { UserContext } from "../../login/UserContext";
 
-export default function importTasks(event) {
-    const user = currentUser(); 
+export default function ImportTasks(event) {
+    const { user } = useContext(UserContext);
+
     if (!user) {
         alert("You need to be logged in to import tasks.");
         return;
     }
 
-    const userId = user.userId; 
+    const userId = user.userId;
     const file = event.target.files[0];
     if (!file) return;
 

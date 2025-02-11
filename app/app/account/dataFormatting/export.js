@@ -1,15 +1,17 @@
 "use client";
 
-import { currentUser } from "../../login/UserLogin.js"; 
+import { useContext } from "react";
+import { UserContext } from "../../login/UserContext";
 
-export default function exportTasks(format) {
-    const user = currentUser(); 
+export default function ExportTasks({ format }) {
+    const { user } = useContext(UserContext);
+
     if (!user) {
         alert("You need to be logged in to export tasks.");
         return;
     }
 
-    const userId = user.userId; 
+    const userId = user.userId;
     const storedData = localStorage.getItem(userId);
     if (!storedData) {
         alert("No tasks found to export.");
@@ -17,7 +19,7 @@ export default function exportTasks(format) {
     }
 
     const parsedData = JSON.parse(storedData);
-    const tasksByDate = parsedData.tasksByDate || {}; 
+    const tasksByDate = parsedData.tasksByDate || {};
 
     let exportedData = "";
     let fileType = "";
@@ -28,7 +30,7 @@ export default function exportTasks(format) {
         fileType = "application/json";
     } else if (format === "csv") {
         const csvRows = [];
-        csvRows.push("Date,Task Name,Description,Priority,Done"); 
+        csvRows.push("Date,Task Name,Description,Priority,Done");
 
         for (const [date, taskData] of Object.entries(tasksByDate)) {
             taskData.tasks.forEach((task) => {

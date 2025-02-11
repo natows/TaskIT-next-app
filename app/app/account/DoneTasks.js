@@ -1,14 +1,14 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
-import { currentUser } from "../login/UserLogin.js";
+import { useState, useEffect, useMemo, useContext } from "react";
+import { UserContext } from "../login/UserContext";
 
 export default function DoneTasks() {
+    const { user } = useContext(UserContext);
     const [availableDates, setAvailableDates] = useState([]); 
     const [selectedDate, setSelectedDate] = useState(""); 
     const [doneTasks, setDoneTasks] = useState([]); 
     const [isDisplayed, setIsDisplayed] = useState(false); 
 
-    const user = currentUser();
     if (!user) {
         return <p>Please log in to view done tasks.</p>;
     }
