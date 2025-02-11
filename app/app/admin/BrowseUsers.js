@@ -1,11 +1,15 @@
 "use client";
 import { useState, useEffect } from "react";
+import EditUser from "./EditUser";
+import UserTasksModal from "./UserTasksModal";
 
-export default function BrowseUsers({ users, deleteUser }) {
+export default function BrowseUsers({ users, deleteUser, updateUser }) {
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
     const [userTasks, setUserTasks] = useState([]);
+    const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+    const [isUserTasksModalOpen, setIsUserTasksModalOpen] = useState(false);
 
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -32,18 +36,30 @@ export default function BrowseUsers({ users, deleteUser }) {
 
     const handleSeeTasks = (user) => {
         setSelectedUser(user);
+        setIsUserTasksModalOpen(true);
     };
 
     const handleCloseTasks = () => {
         setSelectedUser(null);
         setUserTasks([]);
+        setIsUserTasksModalOpen(false);
+    };
+
+    const handleEditUser = (user) => {
+        setSelectedUser(user);
+        setIsEditUserModalOpen(true);
+    };
+
+    const handleCloseEditUser = () => {
+        setIsEditUserModalOpen(false);
+        setSelectedUser(null);
     };
 
     return (
         <div style={{ display: "flex", flexDirection: "row", width: "100%" }}>
             <div
                 style={{
-                    flexBasis: selectedUser ? "50%" : "100%",
+                    flexBasis: "100%",
                     padding: "10px",
                     transition: "flex-basis 0.3s ease-in-out",
                 }}
@@ -81,12 +97,13 @@ export default function BrowseUsers({ users, deleteUser }) {
                         marginBottom: "10px",
                     }}
                 >
-                    <span style={{ flexBasis: "20%", textAlign: "left" }}>Username</span>
-                    <span style={{ flexBasis: "20%", textAlign: "left" }}>Password</span>
-                    <span style={{ flexBasis: "20%", textAlign: "left" }}>ID</span>
-                    <span style={{ flexBasis: "20%", textAlign: "left" }}>Role</span>
-                    <span style={{ flexBasis: "20%", textAlign: "center" }}>Tasks</span>
-                    <span style={{ flexBasis: "20%", textAlign: "center" }}>Actions</span>
+                    <span style={{ flexBasis: "15%", textAlign: "left" }}>Username</span>
+                    <span style={{ flexBasis: "15%", textAlign: "left" }}>Password</span>
+                    <span style={{ flexBasis: "15%", textAlign: "left" }}>ID</span>
+                    <span style={{ flexBasis: "15%", textAlign: "left" }}>Role</span>
+                    <span style={{ flexBasis: "10%", textAlign: "center" }}>Edit</span>
+                    <span style={{ flexBasis: "10%", textAlign: "center" }}>Tasks</span>
+                    <span style={{ flexBasis: "10%", textAlign: "center" }}>Actions</span>
                 </div>
 
                 <ul style={{ listStyle: "none", padding: 0 }}>
@@ -106,39 +123,56 @@ export default function BrowseUsers({ users, deleteUser }) {
                                     padding: "5px 10px",
                                 }}
                             >
-                                <span style={{ flexBasis: "20%", textAlign: "left" }}>{user.username}</span>
-                                <span style={{ flexBasis: "20%", textAlign: "left" }}>{user.password}</span>
-                                <span style={{ flexBasis: "20%", textAlign: "left" }}>{user.userId}</span>
-                                <span style={{ flexBasis: "20%", textAlign: "left" }}>{user.role}</span>
+                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.username}</span>
+                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.password}</span>
+                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.userId}</span>
+                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.role}</span>
                                 <button
                                     style={{
-                                        flexBasis: "20%",
+                                        flexBasis: "10%",
+                                        backgroundColor: "#4CAF50",
+                                        color: "white",
+                                        border: "none",
+                                        borderRadius: "5px",
+                                        padding: "5px",
+                                        cursor: "pointer",
+                                        textAlign: "center",
+                                        marginRight: "5px",
+                                    }}
+                                    onClick={() => handleEditUser(user)}
+                                >
+                                    <i className="fa-solid fa-pen"></i>
+                                </button>
+                                <button
+                                    style={{
+                                        flexBasis: "10%",
                                         backgroundColor: "#2196F3",
                                         color: "white",
                                         border: "none",
                                         borderRadius: "5px",
-                                        padding: "5px 10px",
+                                        padding: "5px",
                                         cursor: "pointer",
                                         textAlign: "center",
+                                        marginRight: "5px",
                                     }}
                                     onClick={() => handleSeeTasks(user)}
                                 >
-                                    See tasks
+                                    <i className="fa-solid fa-list-check"></i>
                                 </button>
                                 <button
                                     onClick={() => deleteUser(user.username)}
                                     style={{
-                                        flexBasis: "20%",
+                                        flexBasis: "10%",
                                         backgroundColor: "#f44336",
                                         color: "white",
                                         border: "none",
                                         borderRadius: "5px",
-                                        padding: "5px 10px",
+                                        padding: "5px",
                                         cursor: "pointer",
                                         textAlign: "center",
                                     }}
                                 >
-                                    Delete user
+                                    <i className="fa-solid fa-trash"></i>
                                 </button>
                             </li>
                         ))
@@ -146,53 +180,20 @@ export default function BrowseUsers({ users, deleteUser }) {
                 </ul>
             </div>
 
-            {selectedUser && (
-                <div
-                    style={{
-                        flexBasis: "50%",
-                        padding: "10px",
-                        transition: "flex-basis 0.3s ease-in-out",
-                    }}
-                >
-                    <h3>Tasks for user: {selectedUser.username}</h3>
-                    <button
-                        onClick={handleCloseTasks}
-                        style={{ backgroundColor: "#f44336", color: "white", padding: "5px 10px" }}
-                    >
-                        Close Tasks
-                    </button>
-                    <ul style={{ listStyle: "none", padding: 0 }}>
-                        {userTasks.length > 0 ? (
-                            userTasks.map((task, index) => (
-                                <li
-                                    key={index}
-                                    style={{
-                                        marginBottom: "10px",
-                                        border: "1px solid #ddd",
-                                        borderRadius: "5px",
-                                        padding: "5px 10px",
-                                        backgroundColor: "#f9f9f9",
-                                    }}
-                                >
-                                    <p>
-                                        <strong>{task.name}</strong>
-                                        <br />
-                                        Status: {task.done ? <span>Done</span> : <span>Undone</span>}
-                                        <br />
-                                        Priority: <span>{task.priority}</span>
-                                    </p>
-                                    Description: {task.description ? (
-                                        <span>{task.description}</span>
-                                    ) : (
-                                        <span>No description yet</span>
-                                    )}
-                                </li>
-                            ))
-                        ) : (
-                            <p>No tasks available for this user.</p>
-                        )}
-                    </ul>
-                </div>
+            {isEditUserModalOpen && (
+                <EditUser
+                    user={selectedUser}
+                    updateUser={updateUser}
+                    onClose={handleCloseEditUser}
+                />
+            )}
+
+            {isUserTasksModalOpen && (
+                <UserTasksModal
+                    user={selectedUser}
+                    tasks={userTasks}
+                    onClose={handleCloseTasks}
+                />
             )}
         </div>
     );

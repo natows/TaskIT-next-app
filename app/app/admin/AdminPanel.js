@@ -30,11 +30,18 @@ export default function AdminPanel() {
         fetchUsers(); 
     };
 
+    const updateUser = (updatedUser) => {
+        const usersData = JSON.parse(localStorage.getItem("users")) || {};
+        usersData[updatedUser.username] = updatedUser;
+        localStorage.setItem("users", JSON.stringify(usersData));
+        fetchUsers();
+    };
+
     return (
         <div>
             <h1>Admin Panel</h1>
             <CreateUser addUser={addUser} /> 
-            <BrowseUsers users={users} deleteUser={deleteUser} />
+            <BrowseUsers users={users} deleteUser={deleteUser} updateUser={updateUser} />
         </div>
     );
 }

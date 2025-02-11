@@ -1,26 +1,47 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useReducer, useEffect, useContext, useRef, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { UserContext } from "../login/UserContext";
 import SortingTasks from "./SortingTasks";
 import Attachments from "./Attachments";
 
+const initialState = {
+    taskList: [],
+    newTask: "",
+    priority: "normal",
+    searchQuery: "",
+    editTaskIndex: null,
+    editedTask: "",
+    descriptionInput: "",
+    showDescriptions: {},
+    attachments: {},
+    isHydrated: false,
+    isDescriptionModalOpen: false,
+    currentDescriptionIndex: null,
+    isEditTaskModalOpen: false,
+    sortCriteria: "",
+};
+
+function reducer(state, action) {
+    switch (action.type) {
+        case "SET_FIELD":
+            return { ...state, [action.field]: action.value };
+        case "SET_TASK_LIST":
+            return { ...state, taskList: action.taskList };
+        case "SET_ATTACHMENTS":
+            return { ...state, attachments: action.attachments };
+        case "RESET":
+            return initialState;
+        default:
+            return state;
+    }
+}
+
 export default function DayEditing() {
     const { date } = useParams();
     const { user } = useContext(UserContext);
-    const [taskList, setTaskList] = useState([]);
-    const [newTask, setNewTask] = useState("");
-    const [priority, setPriority] = useState("normal");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [editTaskIndex, setEditTaskIndex] = useState(null);
-    const [editedTask, setEditedTask] = useState("");
-    const [descriptionInput, setDescriptionInput] = useState("");
-    const [showDescriptions, setShowDescriptions] = useState({});
-    const [attachments, setAttachments] = useState({});
-    const [isHydrated, setIsHydrated] = useState(false);
-    const [isDescriptionModalOpen, setIsDescriptionModalOpen] = useState(false);
-    const [currentDescriptionIndex, setCurrentDescriptionIndex] = useState(null);
-    const [isEditTaskModalOpen, setIsEditTaskModalOpen] = useState(false);
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const taskListRef = useRef(null);
 
     useEffect(() => {
         if (!user) return;
@@ -30,32 +51,35 @@ export default function DayEditing() {
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
         if (parsedData.tasksByDate[date]) {
-            setTaskList(parsedData.tasksByDate[date].tasks || []);
-            setAttachments(parsedData.tasksByDate[date].attachments || {});
+            dispatch({ type: "SET_TASK_LIST", taskList: parsedData.tasksByDate[date].tasks || [] });
+            dispatch({ type: "SET_ATTACHMENTS", attachments: parsedData.tasksByDate[date].attachments || {} });
         }
 
-        setIsHydrated(true);
+        dispatch({ type: "SET_FIELD", field: "isHydrated", value: true });
     }, [date, user]);
 
     useEffect(() => {
-        if (!user || !isHydrated) return;
+        if (!user || !state.isHydrated) return;
 
         const userId = user.userId;
         const storedData = localStorage.getItem(userId);
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
 
-        parsedData.tasksByDate[date] = { tasks: taskList, attachments: attachments };
+        parsedData.tasksByDate[date] = { tasks: state.taskList, attachments: state.attachments };
         localStorage.setItem(userId, JSON.stringify(parsedData));
-    }, [taskList, attachments, isHydrated, date, user]);
+    }, [state.taskList, state.attachments, state.isHydrated, date, user]);
 
     const addTask = () => {
-        if (newTask.trim() !== "") {
-            setTaskList([
-                ...taskList,
-                { name: newTask, description: "", priority: priority, done: false }
-            ]);
-            setNewTask("");
-            setPriority("normal");
+        if (state.newTask.trim() !== "") {
+            dispatch({
+                type: "SET_TASK_LIST",
+                taskList: [
+                    ...state.taskList,
+                    { name: state.newTask, description: "", priority: state.priority, done: false }
+                ]
+            });
+            dispatch({ type: "SET_FIELD", field: "newTask", value: "" });
+            dispatch({ type: "SET_FIELD", field: "priority", value: "normal" });
         }
     };
 
@@ -72,9 +96,9 @@ export default function DayEditing() {
     };
 
     const removeTask = (index) => {
-        const updatedList = taskList.filter((_, i) => i !== index);
-        setTaskList(updatedList);
-        if (taskList.length === 0) {
+        const updatedList = state.taskList.filter((_, i) => i !== index);
+        dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+        if (state.taskList.length === 0) {
             const userId = user.userId;
             const storedData = localStorage.getItem(userId);
             const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
@@ -86,83 +110,90 @@ export default function DayEditing() {
     };
 
     const handleEditTask = (task, index) => {
-        setEditTaskIndex(index);
-        setEditedTask(task.name);
-        setIsEditTaskModalOpen(true);
+        dispatch({ type: "SET_FIELD", field: "editTaskIndex", value: index });
+        dispatch({ type: "SET_FIELD", field: "editedTask", value: task.name });
+        dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: true });
     };
 
     const updateTask = () => {
-        if (editedTask.trim() !== "") {
-            const updatedList = [...taskList];
-            updatedList[editTaskIndex] = { ...updatedList[editTaskIndex], name: editedTask };
-            setTaskList(updatedList);
-            setEditTaskIndex(null);
-            setEditedTask("");
-            setIsEditTaskModalOpen(false);
+        if (state.editedTask.trim() !== "") {
+            const updatedList = [...state.taskList];
+            updatedList[state.editTaskIndex] = { ...updatedList[state.editTaskIndex], name: state.editedTask };
+            dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+            dispatch({ type: "SET_FIELD", field: "editTaskIndex", value: null });
+            dispatch({ type: "SET_FIELD", field: "editedTask", value: "" });
+            dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: false });
         }
     };
 
     const toggleTaskStatus = (task) => {
-        const updatedList = taskList.map((t) =>
+        const updatedList = state.taskList.map((t) =>
             t.name === task.name
                 ? { ...t, done: !t.done }
                 : t
         );
-        setTaskList(updatedList);
+        dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
     };
 
     const addDescription = (index) => {
-        const updatedList = [...taskList];
-        updatedList[index] = { ...updatedList[index], description: descriptionInput };
-        setTaskList(updatedList);
-        setDescriptionInput("");
+        const updatedList = [...state.taskList];
+        updatedList[index] = { ...updatedList[index], description: state.descriptionInput };
+        dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+        dispatch({ type: "SET_FIELD", field: "descriptionInput", value: "" });
     };
 
     const toggleDescriptionVisibility = (index) => {
-        setShowDescriptions((prev) => ({
-            ...prev,
-            [index]: !prev[index],
-        }));
+        dispatch({
+            type: "SET_FIELD",
+            field: "showDescriptions",
+            value: { ...state.showDescriptions, [index]: !state.showDescriptions[index] }
+        });
     };
 
     const handlePrioritySet = (index, level) => {
-        const updatedList = [...taskList];
+        const updatedList = [...state.taskList];
         updatedList[index] = { ...updatedList[index], priority: level };
-        setTaskList(updatedList);
+        dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
     };
 
     const handleSort = (criteria) => {
-        let sortedList = [...taskList];
-        if (criteria === "name-asc") {
-            sortedList.sort((a, b) => a.name.localeCompare(b.name));
-        } else if (criteria === "name-desc") {
-            sortedList.sort((a, b) => b.name.localeCompare(a.name));
-        } else if (criteria === "priority-high-low") {
-            const priorityOrder = { low: 1, normal: 2, high: 3 };
-            sortedList.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
-        } else if (criteria === "priority-low-high") {
-            const priorityOrder = { low: 1, normal: 2, high: 3 };
-            sortedList.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-        } else if (criteria === "status") {
-            sortedList.sort((a, b) => a.done - b.done);
-        }
-        setTaskList(sortedList);
+        dispatch({ type: "SET_FIELD", field: "sortCriteria", value: criteria });
     };
 
-    const filteredTasks = taskList.filter((task) =>
-        task.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const sortedTasks = useMemo(() => {
+        let sortedList = [...state.taskList];
+        if (state.sortCriteria === "name-asc") {
+            sortedList.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (state.sortCriteria === "name-desc") {
+            sortedList.sort((a, b) => b.name.localeCompare(a.name));
+        } else if (state.sortCriteria === "priority-high-low") {
+            const priorityOrder = { low: 1, normal: 2, high: 3 };
+            sortedList.sort((a, b) => priorityOrder[b.priority] - priorityOrder[a.priority]);
+        } else if (state.sortCriteria === "priority-low-high") {
+            const priorityOrder = { low: 1, normal: 2, high: 3 };
+            sortedList.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+        } else if (state.sortCriteria === "status") {
+            sortedList.sort((a, b) => a.done - b.done);
+        }
+        return sortedList;
+    }, [state.taskList, state.sortCriteria]);
+
+    const filteredTasks = useMemo(() => {
+        return sortedTasks.filter((task) =>
+            task.name.toLowerCase().includes(state.searchQuery.toLowerCase())
+        );
+    }, [sortedTasks, state.searchQuery]);
 
     const handleDescriptionClick = (index) => {
-        setCurrentDescriptionIndex(index);
-        setDescriptionInput(taskList[index].description || "");
-        setIsDescriptionModalOpen(true);
+        dispatch({ type: "SET_FIELD", field: "currentDescriptionIndex", value: index });
+        dispatch({ type: "SET_FIELD", field: "descriptionInput", value: state.taskList[index].description || "" });
+        dispatch({ type: "SET_FIELD", field: "isDescriptionModalOpen", value: true });
     };
 
     const handleDescriptionSave = () => {
-        if (currentDescriptionIndex !== null) {
-            addDescription(currentDescriptionIndex);
-            setIsDescriptionModalOpen(false);
+        if (state.currentDescriptionIndex !== null) {
+            addDescription(state.currentDescriptionIndex);
+            dispatch({ type: "SET_FIELD", field: "isDescriptionModalOpen", value: false });
         }
     };
 
@@ -170,7 +201,7 @@ export default function DayEditing() {
         return <p>Please log in to manage tasks.</p>;
     }
 
-    if (!isHydrated) {
+    if (!state.isHydrated) {
         return null;
     }
 
@@ -181,15 +212,15 @@ export default function DayEditing() {
             <div className="flex mb-4">
                 <input
                     type="text"
-                    value={newTask}
-                    onChange={(e) => setNewTask(e.target.value)}
+                    value={state.newTask}
+                    onChange={(e) => dispatch({ type: "SET_FIELD", field: "newTask", value: e.target.value })}
                     placeholder="New task"
                     onKeyDown={(e) => handleKeyDown(e, 1)}
                     className="border rounded p-2 flex-grow mr-2"
                 />
                 <select
-                    value={priority}
-                    onChange={(e) => setPriority(e.target.value)}
+                    value={state.priority}
+                    onChange={(e) => dispatch({ type: "SET_FIELD", field: "priority", value: e.target.value })}
                     className="border rounded p-2 mr-2"
                 >
                     <option value="low">Low</option>
@@ -199,22 +230,22 @@ export default function DayEditing() {
                 <button onClick={addTask} className="bg-blue-500 text-white py-2 px-4 rounded mr-2">Add task</button>
                 <input
                     type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={state.searchQuery}
+                    onChange={(e) => dispatch({ type: "SET_FIELD", field: "searchQuery", value: e.target.value })}
                     placeholder="Search tasks"
                     className="border rounded p-2 flex-grow"
                 />
             </div>
             <h3 className="text-xl font-semibold mb-2">Task List</h3>
-            <ul>
+            <ul ref={taskListRef}>
                 {filteredTasks.map((task, index) => (
                     <li key={index} className="flex justify-between items-center mb-2 p-2 border rounded">
-                        {editTaskIndex === index ? (
+                        {state.editTaskIndex === index ? (
                             <div className="flex items-center w-full justify-end">
                                 <input
                                     type="text"
-                                    value={editedTask}
-                                    onChange={(e) => setEditedTask(e.target.value)}
+                                    value={state.editedTask}
+                                    onChange={(e) => dispatch({ type: "SET_FIELD", field: "editedTask", value: e.target.value })}
                                     onKeyDown={(e) => handleKeyDown(e, 2)}
                                     className="border rounded p-2 mr-2"
                                 />
@@ -222,7 +253,7 @@ export default function DayEditing() {
                             </div>
                         ) : (
                             <div className="flex items-center w-full justify-between">
-                                <span className="flex-grow">{task.name}</span>
+                                <span className="flex-grow" style={{ fontSize: '1.3rem' }}>{task.name}</span>
                                 <div className="flex items-center justify-end gap-2">
                                     <button onClick={() => removeTask(index)} className="bg-red-500 text-white py-1 px-3 rounded mr-2"><i className="fa-solid fa-trash"></i></button>
                                     <button onClick={() => handleEditTask(task, index)} className="bg-yellow-500 text-white py-1 px-3 rounded mr-2"><i className="fa-solid fa-pen"></i></button>
@@ -240,7 +271,7 @@ export default function DayEditing() {
                                         onClick={() => handleDescriptionClick(index)}
                                         className="bg-blue-500 text-white py-1 px-3 rounded mr-2"
                                     >
-                                        {showDescriptions[index] ? <i className="fa-solid fa-x"></i> : <i className="fa-regular fa-note-sticky"></i>}
+                                        {state.showDescriptions[index] ? <i className="fa-solid fa-x"></i> : <i className="fa-regular fa-note-sticky"></i>}
                                     </button>
                                     <div className="flex gap-2 ml-4">
                                         <button
@@ -256,46 +287,46 @@ export default function DayEditing() {
                                             className={`w-4 h-4 rounded-full ${task.priority === "high" ? "bg-red-500" : "bg-red-200"}`}
                                         ></button>
                                     </div>
-                                    <Attachments taskIndex={index} attachments={attachments} setAttachments={setAttachments} />
+                                    <Attachments taskIndex={index} attachments={state.attachments} setAttachments={(attachments) => dispatch({ type: "SET_ATTACHMENTS", attachments })} />
                                 </div>
                             </div>
                         )}
                     </li>
                 ))}
             </ul>
-            {isDescriptionModalOpen && (
+            {state.isDescriptionModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h2 className="text-xl font-bold mb-4">Edit Description</h2>
                         <textarea
-                            value={descriptionInput}
-                            onChange={(e) => setDescriptionInput(e.target.value)}
+                            value={state.descriptionInput}
+                            onChange={(e) => dispatch({ type: "SET_FIELD", field: "descriptionInput", value: e.target.value })}
                             className="border rounded p-2 w-full mb-4"
                             rows="4"
                         />
                         <button onClick={handleDescriptionSave} className="bg-green-500 text-white py-2 px-4 rounded mr-2">
                             Save
                         </button>
-                        <button onClick={() => setIsDescriptionModalOpen(false)} className="bg-gray-500 text-white py-2 px-4 rounded">
+                        <button onClick={() => dispatch({ type: "SET_FIELD", field: "isDescriptionModalOpen", value: false })} className="bg-gray-500 text-white py-2 px-4 rounded">
                             Close
                         </button>
                     </div>
                 </div>
             )}
-            {isEditTaskModalOpen && (
+            {state.isEditTaskModalOpen && (
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h2 className="text-xl font-bold mb-4">Edit Task</h2>
                         <input
                             type="text"
-                            value={editedTask}
-                            onChange={(e) => setEditedTask(e.target.value)}
+                            value={state.editedTask}
+                            onChange={(e) => dispatch({ type: "SET_FIELD", field: "editedTask", value: e.target.value })}
                             className="border rounded p-2 w-full mb-4"
                         />
                         <button onClick={updateTask} className="bg-green-500 text-white py-2 px-4 rounded mr-2">
                             Save
                         </button>
-                        <button onClick={() => setIsEditTaskModalOpen(false)} className="bg-gray-500 text-white py-2 px-4 rounded">
+                        <button onClick={() => dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: false })} className="bg-gray-500 text-white py-2 px-4 rounded">
                             Close
                         </button>
                     </div>

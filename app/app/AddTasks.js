@@ -1,11 +1,13 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useState, useContext } from "react";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { UserContext } from "./login/UserContext";
+import Attachments from "./[date]/Attachments";
 
 export default function AddTask() {
     const { user } = useContext(UserContext);
+    const [attachments, setAttachments] = useState({});
 
     const validationSchema = Yup.object().shape({
         taskName: Yup.string().required("Please enter a task name."),
@@ -53,10 +55,12 @@ export default function AddTask() {
             const formattedDate = date.toISOString().split('T')[0];
 
             if (!parsedUserTasks.tasksByDate[formattedDate]) {
-                parsedUserTasks.tasksByDate[formattedDate] = { tasks: [] };
+                parsedUserTasks.tasksByDate[formattedDate] = { tasks: [], attachments: {} };
             }
 
+            const taskIndex = parsedUserTasks.tasksByDate[formattedDate].tasks.length;
             parsedUserTasks.tasksByDate[formattedDate].tasks.push(newTask);
+            parsedUserTasks.tasksByDate[formattedDate].attachments[taskIndex] = attachments[taskIndex] || [];
         }
 
         localStorage.setItem(userId, JSON.stringify(parsedUserTasks));
@@ -64,6 +68,7 @@ export default function AddTask() {
         console.log("Task added:", newTask);
 
         resetForm();
+        setAttachments({}); 
     };
 
     return (
@@ -134,6 +139,10 @@ export default function AddTask() {
                                 <option value="normal">Normal</option>
                                 <option value="high">High</option>
                             </Field>
+                        </div>
+
+                        <div className="mb-4">
+                            <Attachments taskIndex={0} attachments={attachments} setAttachments={setAttachments} />
                         </div>
 
                         <button type="submit" className="bg-blue-500 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-600 transition-colors">
