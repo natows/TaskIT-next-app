@@ -23,8 +23,8 @@ export default function AccountPage(){
     }
     return(
         <div>
-        <button onClick={userToNull}>Log out</button>
-        <Link href="account/settings">Settings</Link>
+        {/* <button onClick={userToNull}>Log out</button>
+        <Link href="account/settings">Settings</Link> */}
         <DoneTasks />
         <TaskExportImport />
         </div>

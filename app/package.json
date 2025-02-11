@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "date-fns": "^4.1.0",
+    "font-awesome": "^4.7.0",
     "formik": "^2.4.6",
     "next": "15.1.4",
     "react": "^19.0.0",
