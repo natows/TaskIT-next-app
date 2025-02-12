@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useContext } from "react";
-import { UserContext } from "./login/UserContext";
+import { UserContext, UserProvider } from "./login/UserContext";
+import { UserActivityProvider } from "./admin/UserActivityContext";
 import Calendar from "./Calendar.js";
 import CurrentTasks from "./CurrentTasks.js";
 import BrowseTasks from "./BrowseTasks.js";
@@ -32,7 +33,9 @@ export default function HomePage() {
         <div className="p-4">
             {user !== null ? (
                 user.isAdmin ? (
-                    <AdminPanel />
+                    <UserActivityProvider>
+                        <AdminPanel />
+                    </UserActivityProvider>
                 ) : (
                     <div>
                         <div className="flex gap-8 mb-4">

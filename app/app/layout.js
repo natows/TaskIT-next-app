@@ -4,6 +4,7 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 import { UserProvider } from './login/UserContext';
 import { ThemeProvider } from './ThemeContext';
 import { NotificationProvider } from './NotificationContext';
+import { UserActivityProvider } from './admin/UserActivityContext';
 import Navigation from './Navigation';
 
 
@@ -27,14 +28,16 @@ export default function RootLayout({ children }) {
         <html lang="en">
             <body className={`${geistSans.variable} ${geistMono.variable}`}>
                 <ThemeProvider>
-                    <UserProvider>
-                        <NotificationProvider>
-                            <Navigation />
-                            <div className="p-4">
-                                {children}
-                            </div>
-                        </NotificationProvider>
-                    </UserProvider>
+                    <UserActivityProvider>
+                        <UserProvider>
+                            <NotificationProvider>
+                                <Navigation />
+                                <div className="p-4">
+                                    {children}
+                                </div>
+                            </NotificationProvider>
+                        </UserProvider>
+                    </UserActivityProvider>
                 </ThemeProvider>
             </body>
         </html>

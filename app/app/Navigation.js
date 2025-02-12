@@ -28,10 +28,10 @@ export default function Navigation() {
                     <div className="flex items-center ml-4">
                         <p className="mr-4">{user.isAdmin ? `Welcome Admin ${user.username}` : `Welcome ${user.username}`}</p>
                         <button onClick={userToNull} className="bg-red-500 text-white py-1 px-4 rounded mr-2">Log out</button>
-                        <Link href="/account">
-                            <i className="fa-solid fa-user"></i>
-                        </Link>
                         {!user.isAdmin && (
+                            <div><Link href="/account">
+                            <i className="fa-solid fa-user"></i>
+                            </Link>
                             <button onClick={toggleNotifications} className="relative ml-4">
                                 <i className="fa-solid fa-bell"></i>
                                 {notifications.length > 0 && (
@@ -40,9 +40,10 @@ export default function Navigation() {
                                     </span>
                                 )}
                             </button>
+                            </div>
                         )}
                         {showNotifications && !user.isAdmin && (
-                            <div className="absolute top-12 right-0 bg-white text-black p-4 rounded shadow-lg w-64 z-10">
+                            <div className="notif absolute top-12 right-0 bg-white text-black p-4 rounded shadow-lg w-64 z-10">
                                 <Notifications />
                             </div>
                         )}

@@ -75,17 +75,7 @@ export default function DoneTasks() {
                     {doneTasks.length > 0 ? (
                         doneTasks.map((task, index) => (
                             <li key={index}>
-                                <button
-                                    style={{
-                                        borderRadius: "50%",
-                                        backgroundColor: "pink",
-                                        width: "20px",
-                                        height: "20px",
-                                    }}
-                                    onClick={() => removeTask(task)}
-                                >
-                                    -
-                                </button>
+                                <button onClick={() => removeTask(task)} className="bg-red-500 text-white py-1 px-3 rounded mr-2"><i className="fa-solid fa-trash"></i></button>
                                 <span>{task.name}</span>
                             </li>
                         ))

@@ -4,11 +4,13 @@ import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { UserContext } from "./login/UserContext";
 import { NotificationContext } from "./NotificationContext";
+import { UserActivityContext } from "./admin/UserActivityContext";
 import Attachments from "./[date]/Attachments";
 
 export default function AddTask() {
     const { user } = useContext(UserContext);
     const { addNotification, addTask } = useContext(NotificationContext);
+    const { logUserActivity } = useContext(UserActivityContext);
     const [attachments, setAttachments] = useState({});
 
     const validationSchema = Yup.object().shape({
@@ -78,6 +80,8 @@ export default function AddTask() {
         }
 
         localStorage.setItem(userId, JSON.stringify(parsedUserTasks));
+
+        logUserActivity(`User ${user.username} added a task: "${newTask.name}"`);
 
         console.log("Task added:", newTask);
 

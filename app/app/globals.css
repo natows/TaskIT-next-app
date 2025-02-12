@@ -121,3 +121,7 @@ input, select {
   background-color: #4a4a4a; 
 }
 
+[data-theme="dark"] .notif {
+  background-color: #1a237e;
+  color: #ffffff;
+}

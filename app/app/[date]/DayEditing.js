@@ -1,7 +1,8 @@
 "use client";
-import { useReducer, useEffect, useContext, useRef, useMemo } from "react";
+import { useReducer, useEffect, useContext, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { UserContext } from "../login/UserContext";
+import { UserActivityContext } from "../admin/UserActivityContext";
 import SortingTasks from "./SortingTasks";
 import Attachments from "./Attachments";
 
@@ -20,6 +21,10 @@ const initialState = {
     currentDescriptionIndex: null,
     isEditTaskModalOpen: false,
     sortCriteria: "",
+    isShareModalOpen: false,
+    taskToShareIndex: null,
+    shareWithUsername: "",
+    shareMessage: "",
 };
 
 function reducer(state, action) {
@@ -32,6 +37,12 @@ function reducer(state, action) {
             return { ...state, attachments: action.attachments };
         case "RESET":
             return initialState;
+        case "OPEN_SHARE_MODAL":
+            return { ...state, isShareModalOpen: true, taskToShareIndex: action.taskIndex };
+        case "CLOSE_SHARE_MODAL":
+            return { ...state, isShareModalOpen: false, taskToShareIndex: null, shareWithUsername: "", shareMessage: "" };
+        case "SET_SHARE_MESSAGE":
+            return { ...state, shareMessage: action.message };
         default:
             return state;
     }
@@ -40,8 +51,8 @@ function reducer(state, action) {
 export default function DayEditing() {
     const { date } = useParams();
     const { user } = useContext(UserContext);
+    const { logUserActivity } = useContext(UserActivityContext);
     const [state, dispatch] = useReducer(reducer, initialState);
-    const taskListRef = useRef(null);
 
     useEffect(() => {
         if (!user) return;
@@ -71,15 +82,14 @@ export default function DayEditing() {
 
     const addTask = () => {
         if (state.newTask.trim() !== "") {
+            const newTask = { name: state.newTask, description: "", priority: state.priority, done: false };
             dispatch({
                 type: "SET_TASK_LIST",
-                taskList: [
-                    ...state.taskList,
-                    { name: state.newTask, description: "", priority: state.priority, done: false }
-                ]
+                taskList: [...state.taskList, newTask]
             });
             dispatch({ type: "SET_FIELD", field: "newTask", value: "" });
             dispatch({ type: "SET_FIELD", field: "priority", value: "normal" });
+            logUserActivity(`User ${user.username} created a task: "${newTask.name}"`);
         }
     };
 
@@ -96,8 +106,10 @@ export default function DayEditing() {
     };
 
     const removeTask = (index) => {
+        const taskName = state.taskList[index].name;
         const updatedList = state.taskList.filter((_, i) => i !== index);
         dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+        logUserActivity(`User ${user.username} removed a task: "${taskName}"`);
         if (state.taskList.length === 0) {
             const userId = user.userId;
             const storedData = localStorage.getItem(userId);
@@ -117,12 +129,14 @@ export default function DayEditing() {
 
     const updateTask = () => {
         if (state.editedTask.trim() !== "") {
+            const oldTaskName = state.taskList[state.editTaskIndex].name;
             const updatedList = [...state.taskList];
             updatedList[state.editTaskIndex] = { ...updatedList[state.editTaskIndex], name: state.editedTask };
             dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
             dispatch({ type: "SET_FIELD", field: "editTaskIndex", value: null });
             dispatch({ type: "SET_FIELD", field: "editedTask", value: "" });
             dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: false });
+            logUserActivity(`User ${user.username} changed task "${oldTaskName}" to "${state.editedTask}"`);
         }
     };
 
@@ -133,6 +147,7 @@ export default function DayEditing() {
                 : t
         );
         dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+        logUserActivity(`User ${user.username} marked task "${task.name}" as ${task.done ? "not done" : "done"}`);
     };
 
     const addDescription = (index) => {
@@ -197,6 +212,39 @@ export default function DayEditing() {
         }
     };
 
+    const openShareModal = (taskIndex) => {
+        dispatch({ type: "OPEN_SHARE_MODAL", taskIndex });
+    };
+
+    const closeShareModal = () => {
+        dispatch({ type: "CLOSE_SHARE_MODAL" });
+    };
+
+    const shareTask = () => {
+        const taskIndex = state.taskToShareIndex;
+        const task = state.taskList[taskIndex];
+        const users = JSON.parse(localStorage.getItem("users")) || {};
+        const sharedUser = Object.values(users).find(user => user.username === state.shareWithUsername);
+
+        if (!sharedUser) {
+            dispatch({ type: "SET_SHARE_MESSAGE", message: "User not found" });
+            return;
+        }
+
+        const sharedUserId = sharedUser.userId;
+        const sharedUserData = JSON.parse(localStorage.getItem(sharedUserId)) || { tasksByDate: {} };
+
+        if (!sharedUserData.tasksByDate[date]) {
+            sharedUserData.tasksByDate[date] = { tasks: [], attachments: {} };
+        }
+
+        sharedUserData.tasksByDate[date].tasks.push(task);
+        localStorage.setItem(sharedUserId, JSON.stringify(sharedUserData));
+
+        logUserActivity(`User ${user.username} shared task "${task.name}" with ${state.shareWithUsername}`);
+        dispatch({ type: "SET_SHARE_MESSAGE", message: `Task "${task.name}" shared with ${state.shareWithUsername}` });
+    };
+
     if (!user) {
         return <p>Please log in to manage tasks.</p>;
     }
@@ -237,7 +285,7 @@ export default function DayEditing() {
                 />
             </div>
             <h3 className="text-xl font-semibold mb-2">Task List</h3>
-            <ul ref={taskListRef}>
+            <ul>
                 {filteredTasks.map((task, index) => (
                     <li key={index} className="flex justify-between items-center mb-2 p-2 border rounded">
                         {state.editTaskIndex === index ? (
@@ -288,6 +336,7 @@ export default function DayEditing() {
                                         ></button>
                                     </div>
                                     <Attachments taskIndex={index} attachments={state.attachments} setAttachments={(attachments) => dispatch({ type: "SET_ATTACHMENTS", attachments })} />
+                                    <button onClick={() => openShareModal(index)} className="bg-blue-500 text-white py-1 px-3 rounded"><i className="fa-solid fa-share"></i></button>
                                 </div>
                             </div>
                         )}
@@ -329,6 +378,27 @@ export default function DayEditing() {
                         <button onClick={() => dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: false })} className="bg-gray-500 text-white py-2 px-4 rounded">
                             Close
                         </button>
+                    </div>
+                </div>
+            )}
+            {state.isShareModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <h2 className="text-xl font-bold mb-4">Share Task</h2>
+                        <input
+                            type="text"
+                            value={state.shareWithUsername}
+                            onChange={(e) => dispatch({ type: "SET_FIELD", field: "shareWithUsername", value: e.target.value })}
+                            placeholder="Username to share with"
+                            className="border rounded p-2 w-full mb-4"
+                        />
+                        <button onClick={shareTask} className="bg-blue-500 text-white py-2 px-4 rounded mr-2">
+                            Share
+                        </button>
+                        <button onClick={closeShareModal} className="bg-gray-500 text-white py-2 px-4 rounded">
+                            Close
+                        </button>
+                        {state.shareMessage && <p className="mt-2 text-red-500">{state.shareMessage}</p>}
                     </div>
                 </div>
             )}

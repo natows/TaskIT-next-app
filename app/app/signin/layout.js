@@ -1,6 +1,4 @@
-"use client"
-
-export default function settingsLayout( {children}){
+export default function loginLayout( {children}){
     return (
         <div>
             {children}

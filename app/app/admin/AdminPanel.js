@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import BrowseUsers from "./BrowseUsers";
 import CreateUser from "./CreateUsers";
+import UserActivityLog from "./UserActivityLog";
 
 export default function AdminPanel() {
     const [users, setUsers] = useState([]);
@@ -42,6 +43,7 @@ export default function AdminPanel() {
             <h1>Admin Panel</h1>
             <CreateUser addUser={addUser} /> 
             <BrowseUsers users={users} deleteUser={deleteUser} updateUser={updateUser} />
+            <UserActivityLog />
         </div>
     );
 }

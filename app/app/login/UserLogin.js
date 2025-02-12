@@ -1,4 +1,4 @@
-export function logIn(login, password) {
+export function logIn(login, password, logUserActivity) {
     const users = JSON.parse(localStorage.getItem("users")) || {}; 
 
     if (users[login]) {
@@ -10,33 +10,44 @@ export function logIn(login, password) {
             };
 
             localStorage.setItem("user", JSON.stringify(currentUserData));
+            logUserActivity(`User ${login} logged in`);
             return currentUserData;
         } else {
             throw new Error("Invalid password");
         }
     } else {
-        const newUserId = Date.now().toString();
-        const newUser = {
-            userId: newUserId,
-            username: login,
-            password: password,
-            role: "regular",
-        };
-
-        users[login] = newUser;
-        localStorage.setItem("users", JSON.stringify(users));
-
-        localStorage.setItem(newUserId, JSON.stringify({ tasksByDate: {} }));
-
-        const currentUserData = {
-            userId: newUserId,
-            username: login,
-            isAdmin: false,
-        };
-
-        localStorage.setItem("user", JSON.stringify(currentUserData));
-        return currentUserData;
+        throw new Error("User does not exist");
     }
+}
+
+export function signIn(email, password, logUserActivity) {
+    const users = JSON.parse(localStorage.getItem("users")) || {};
+
+    if (users[email]) {
+        throw new Error("User already exists");
+    }
+
+    const newUserId = Date.now().toString();
+    const newUser = {
+        userId: newUserId,
+        username: email,
+        password: password,
+        role: "regular",
+    };
+
+    users[email] = newUser;
+    localStorage.setItem("users", JSON.stringify(users));
+    localStorage.setItem(newUserId, JSON.stringify({ tasksByDate: {} }));
+
+    const currentUserData = {
+        userId: newUserId,
+        username: email,
+        isAdmin: false,
+    };
+
+    localStorage.setItem("user", JSON.stringify(currentUserData));
+    logUserActivity(`User ${email} registered and logged in`);
+    return currentUserData;
 }
 
 export function currentUser() {
@@ -44,7 +55,13 @@ export function currentUser() {
     return userData ? JSON.parse(userData) : null;
 }
 
-export function logout() {
+export function logout(logUserActivity) {
+    const currentUser = JSON.parse(localStorage.getItem("user"));
+    
+    if (currentUser) {
+        logUserActivity(`User ${currentUser.username} logged out`);
+    }
+    
     localStorage.removeItem("user");
-    window.dispatchEvent(new Event("storage")); 
+    window.dispatchEvent(new Event("storage"));
 }

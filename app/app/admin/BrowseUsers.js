@@ -1,9 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import EditUser from "./EditUser";
 import UserTasksModal from "./UserTasksModal";
+import { UserContext } from "../login/UserContext";
 
 export default function BrowseUsers({ users, deleteUser, updateUser }) {
+    const { user } = useContext(UserContext);
     const [searchTerm, setSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("");
     const [selectedUser, setSelectedUser] = useState(null);
@@ -11,7 +13,7 @@ export default function BrowseUsers({ users, deleteUser, updateUser }) {
     const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
     const [isUserTasksModalOpen, setIsUserTasksModalOpen] = useState(false);
 
-    const currentUser = JSON.parse(localStorage.getItem("user"));
+    const currentUser = user;
 
     const filteredUsers = users.filter((user) => {
         const matchesUsername = user.username.toLowerCase().includes(searchTerm.toLowerCase());

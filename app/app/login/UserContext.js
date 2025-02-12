@@ -1,10 +1,12 @@
 "use client";
-import React, { createContext, useState, useEffect } from "react";
-import { currentUser, logIn, logout } from "./UserLogin";
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { currentUser, logIn, logout, signIn } from "./UserLogin";
+import { UserActivityContext } from "../admin/UserActivityContext";
 
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
+    const { logUserActivity } = useContext(UserActivityContext);
     const [user, setUser] = useState(() => currentUser());
 
     useEffect(() => {
@@ -18,20 +20,29 @@ export const UserProvider = ({ children }) => {
 
     const handleLogin = (login, password) => {
         try {
-            const userData = logIn(login, password);
+            const userData = logIn(login, password, logUserActivity);
             setUser(userData);  
         } catch (error) {
             console.error(error.message);
         }
     };
 
+    const handleRegister = (email, password) => {
+        try {
+            const userData = signIn(email, password, logUserActivity);
+            setUser(userData);
+        } catch (error) {
+            console.error(error.message);
+        }
+    };
+
     const handleLogout = () => {
-        logout();
+        logout(logUserActivity);
         setUser(null);
     };
 
     return (
-        <UserContext.Provider value={{ user, handleLogin, handleLogout }}>
+        <UserContext.Provider value={{ user, handleLogin, handleRegister, handleLogout }}>
             {children}
         </UserContext.Provider>
     );
