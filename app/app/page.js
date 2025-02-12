@@ -6,6 +6,7 @@ import CurrentTasks from "./CurrentTasks.js";
 import BrowseTasks from "./BrowseTasks.js";
 import AddTask from "./AddTasks.js";
 import AdminPanel from "./admin/AdminPanel.js";
+import BrowseDays from "./BrowseDays.js";
 
 export default function HomePage() {
     const { user } = useContext(UserContext);
@@ -35,15 +36,20 @@ export default function HomePage() {
                 ) : (
                     <div>
                         <div className="flex gap-8 mb-4">
-                            <div className="w-1/4">
+                            <div className="w-1/4 h-[300px]">
                                 <AddTask />
                             </div>
 
-                            <div className="w-1/4">
-                                <BrowseTasks />
+                            <div className="w-1/4 flex flex-col justify-between h-[300px] gap-9">
+                                <div className="h-[150px]">
+                                    <BrowseTasks />
+                                </div>
+                                <div className="h-[150px] mt-5">
+                                    <BrowseDays />
+                                </div>
                             </div>
 
-                            <div className="w-1/2 h-[300px] overflow-y-auto">
+                            <div className="w-1/2 h-[300px]">
                                 <CurrentTasks />
                             </div>
                         </div>

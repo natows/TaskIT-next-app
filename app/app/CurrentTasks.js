@@ -2,9 +2,11 @@
 import { useState, useEffect, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { UserContext } from "./login/UserContext";
+import { NotificationContext } from "./NotificationContext";
 
 export default function CurrentTasks() {
     const { user } = useContext(UserContext);
+    const { tasks } = useContext(NotificationContext);
     const [todaysTasks, setTodaysTasks] = useState([]);
     const [doneTasks, setDoneTasks] = useState([]);
     const [tomorrowsTasks, setTomorrowsTasks] = useState([]);
@@ -21,7 +23,7 @@ export default function CurrentTasks() {
 
         getTasks(userId, todaysDate, setTodaysTasks, setDoneTasks);
         getTasks(userId, tomorrowsDate, setTomorrowsTasks, setDoneTomorrowsTasks);
-    }, [refresh, user]);
+    }, [refresh, user, tasks]);
 
     const formatDate = (date) => {
         const year = date.getFullYear();
@@ -75,7 +77,7 @@ export default function CurrentTasks() {
 
     return (
         <div className="grid grid-cols-2 gap-4">
-            <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-64 overflow-y-auto">
+            <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-[300px] overflow-y-auto">
                 <p className="text-xl font-semibold mb-4 cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date()))}>
                     Today's Tasks
                 </p>
@@ -118,7 +120,7 @@ export default function CurrentTasks() {
                 )}
             </div>
 
-            <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-64 overflow-y-auto">
+            <div className="p-6 border border-gray-300 rounded-lg shadow-lg h-[300px] overflow-y-auto">
                 <p className="text-xl font-semibold mb-4 cursor-pointer" onClick={() => handleTaskClick(formatDate(new Date(Date.now() + 24 * 60 * 60 * 1000)))}>
                     Tomorrow's Tasks
                 </p>

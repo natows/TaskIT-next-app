@@ -1,14 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 export default function SortingTasks({ onSort }) {
     const [sortCriteria, setSortCriteria] = useState("");
 
-    const handleSortChange = (event) => {
+    const handleSortChange = useCallback((event) => {
         const criteria = event.target.value;
         setSortCriteria(criteria);
         onSort(criteria);
-    };
+    }, [onSort]); 
 
     return (
         <div className="mb-4">

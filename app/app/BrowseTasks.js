@@ -76,7 +76,7 @@ export default function BrowseTasks() {
                 />
             </div>
             {isVisible && (
-                <ul className="border border-gray-300 max-h-48 overflow-y-auto p-0 mt-2">
+                <ul className="border border-gray-300 overflow-y-auto p-0 mt-2">
                     {filteredTasks.length > 0 ? (
                         filteredTasks.map((task, index) => (
                             <li

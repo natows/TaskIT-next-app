@@ -5,7 +5,7 @@ import { UserProvider } from './login/UserContext';
 import { ThemeProvider } from './ThemeContext';
 import { NotificationProvider } from './NotificationContext';
 import Navigation from './Navigation';
-import Notifications from './Notifications';
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +30,6 @@ export default function RootLayout({ children }) {
                     <UserProvider>
                         <NotificationProvider>
                             <Navigation />
-                            <Notifications />
                             <div className="p-4">
                                 {children}
                             </div>

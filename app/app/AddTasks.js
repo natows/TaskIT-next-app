@@ -3,10 +3,12 @@ import { useState, useContext } from "react";
 import { Formik, Field, Form, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { UserContext } from "./login/UserContext";
+import { NotificationContext } from "./NotificationContext";
 import Attachments from "./[date]/Attachments";
 
 export default function AddTask() {
     const { user } = useContext(UserContext);
+    const { addNotification, addTask } = useContext(NotificationContext);
     const [attachments, setAttachments] = useState({});
 
     const validationSchema = Yup.object().shape({
@@ -44,12 +46,16 @@ export default function AddTask() {
 
         const userId = currentUser.userId;
         const userTasks = localStorage.getItem(userId);
-        const parsedUserTasks = userTasks ? JSON.parse(userTasks) : { tasksByDate: {} };
+        const parsedUserTasks = userTasks ? JSON.parse(userTasks) : { tasksByDate: {}, sentNotifications: {} };
 
         parsedUserTasks.tasksByDate = parsedUserTasks.tasksByDate || {};
 
         const startDate = new Date(values.startDate);
         const endDate = new Date(values.endDate);
+        const today = new Date().toISOString().split('T')[0];
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
         for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
             const formattedDate = date.toISOString().split('T')[0];
@@ -61,6 +67,14 @@ export default function AddTask() {
             const taskIndex = parsedUserTasks.tasksByDate[formattedDate].tasks.length;
             parsedUserTasks.tasksByDate[formattedDate].tasks.push(newTask);
             parsedUserTasks.tasksByDate[formattedDate].attachments[taskIndex] = attachments[taskIndex] || [];
+
+            if (formattedDate === today && newTask.priority === "high") {
+                addNotification(`Task "${newTask.name}" with high priority is due today!`, "high");
+            }
+
+            if (formattedDate === today || formattedDate === tomorrowStr) {
+                addTask(newTask, formattedDate);
+            }
         }
 
         localStorage.setItem(userId, JSON.stringify(parsedUserTasks));
@@ -68,7 +82,7 @@ export default function AddTask() {
         console.log("Task added:", newTask);
 
         resetForm();
-        setAttachments({}); 
+        setAttachments({});
     };
 
     return (
