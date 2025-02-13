@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Box, Button, TextField, Typography, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel } from "@mui/material";
 
 export default function CreateUser({ addUser }) { 
     const [username, setUsername] = useState("");
@@ -40,58 +41,45 @@ export default function CreateUser({ addUser }) {
         setErrorMessage(""); 
 
         addUser(newUser); 
-
     };
-    const handleKeyDown = () => {
+
+    const handleKeyDown = (event) => {
         if (event.key === "Enter") {
-            handleCreateUser()
+            handleCreateUser();
         }
-    }
+    };
 
     return (
-        <div>
-            <h2>Create New User</h2>
-
-            <input
-                type="text"
-                placeholder="Enter username"
+        <Box>
+            <Typography variant="h6" gutterBottom>
+                Create New User
+            </Typography>
+            <TextField
+                fullWidth
+                label="Username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                margin="normal"
             />
-            <input
+            <TextField
+                fullWidth
+                label="Password"
                 type="password"
-                placeholder="Enter password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                margin="normal"
             />
-
-            <div>
-                <label>
-                    <input
-                        type="radio"
-                        name="role"
-                        value="user"
-                        checked={role === "user"}
-                        onChange={() => setRole("user")}
-                    />
-                    Regular User
-                </label>
-                <label>
-                    <input
-                        type="radio"
-                        name="role"
-                        value="admin"
-                        checked={role === "admin"}
-                        onChange={() => setRole("admin")
-                        }
-                    />
-                    Admin
-                </label>
-            </div>
-
-            {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
-
-            <button onClick={handleCreateUser}>Create User</button>
-        </div>
+            <FormControl component="fieldset" margin="normal">
+                <FormLabel component="legend">Role</FormLabel>
+                <RadioGroup row value={role} onChange={(e) => setRole(e.target.value)}>
+                    <FormControlLabel value="user" control={<Radio />} label="Regular User" />
+                    <FormControlLabel value="admin" control={<Radio />} label="Admin" />
+                </RadioGroup>
+            </FormControl>
+            {errorMessage && <Typography color="error">{errorMessage}</Typography>}
+            <Button variant="contained" color="primary" onClick={handleCreateUser} sx={{ mt: 2 }}>
+                Create User
+            </Button>
+        </Box>
     );
 }

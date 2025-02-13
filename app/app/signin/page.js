@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useContext } from "react";
+import { useRef, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserContext } from "../login/UserContext";
 
@@ -8,21 +8,31 @@ export default function SignUpPage() {
     const emailPrompt = useRef();
     const passwordPrompt = useRef();
     const { handleRegister } = useContext(UserContext);
+    const [errorMessage, setErrorMessage] = useState("");
+
+    useEffect(() => {
+        if (errorMessage) {
+            const timer = setTimeout(() => {
+                setErrorMessage("");
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [errorMessage]);
 
     function registerOnClick() {
         const email = emailPrompt.current.value.trim();
         const password = passwordPrompt.current.value.trim();
 
         if (!email || !password) {
-            alert("Please provide both email and password");
+            setErrorMessage("Please provide both email and password");
             return;
         }
 
-        try {
-            handleRegister(email, password);
+        const result = handleRegister(email, password);
+        if (result.success) {
             router.push("/");
-        } catch (error) {
-            alert(error.message);
+        } else {
+            setErrorMessage(result.message);
         }
     }
 
@@ -33,15 +43,17 @@ export default function SignUpPage() {
     }
 
     return (
-        <div className="min-h-screen flex justify-center items-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+        <div className="min-h-screen flex justify-center items-center bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            <div className="modal-content max-w-sm w-full p-6">
                 <h2 className="text-2xl font-bold text-center mb-6">Create an account</h2>
+
+                {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
 
                 <input
                     ref={emailPrompt}
                     type="email"
                     placeholder="Your email"
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     onKeyDown={handleKeyDown}
                 />
 
@@ -49,7 +61,7 @@ export default function SignUpPage() {
                     ref={passwordPrompt}
                     type="password"
                     placeholder="Your password"
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     onKeyDown={handleKeyDown}
                 />
 

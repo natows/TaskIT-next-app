@@ -6,7 +6,7 @@ import { NotificationContext } from "./NotificationContext";
 
 export default function CurrentTasks() {
     const { user } = useContext(UserContext);
-    const { tasks } = useContext(NotificationContext);
+    const { tasks, addNotification } = useContext(NotificationContext);
     const [todaysTasks, setTodaysTasks] = useState([]);
     const [doneTasks, setDoneTasks] = useState([]);
     const [tomorrowsTasks, setTomorrowsTasks] = useState([]);
@@ -63,6 +63,9 @@ export default function CurrentTasks() {
         if (date === formatDate(new Date())) {
             setTodaysTasks(updatedTasks.filter(task => !task.done));
             setDoneTasks(updatedTasks.filter(task => task.done));
+            if (updatedTasks.every(task => task.done)) {
+                addNotification('All tasks for today are done!', 'success');
+            }
         } else {
             setTomorrowsTasks(updatedTasks.filter(task => !task.done));
             setDoneTomorrowsTasks(updatedTasks.filter(task => task.done));

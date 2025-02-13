@@ -19,20 +19,22 @@ export const UserProvider = ({ children }) => {
     }, []);
 
     const handleLogin = (login, password) => {
-        try {
-            const userData = logIn(login, password, logUserActivity);
-            setUser(userData);  
-        } catch (error) {
-            console.error(error.message);
+        const result = logIn(login, password, logUserActivity);
+        if (result.success) {
+            setUser(result.userData);
+            return { success: true };
+        } else {
+            return { success: false, message: result.message };
         }
     };
 
     const handleRegister = (email, password) => {
-        try {
-            const userData = signIn(email, password, logUserActivity);
-            setUser(userData);
-        } catch (error) {
-            console.error(error.message);
+        const result = signIn(email, password, logUserActivity);
+        if (result.success) {
+            setUser(result.userData);
+            return { success: true };
+        } else {
+            return { success: false, message: result.message };
         }
     };
 

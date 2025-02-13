@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
+import { Box, Button, IconButton, InputBase, Paper, Select, MenuItem, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
+import { Edit as EditIcon, Delete as DeleteIcon, List as ListIcon } from "@mui/icons-material";
 import EditUser from "./EditUser";
 import UserTasksModal from "./UserTasksModal";
 import { UserContext } from "../login/UserContext";
@@ -58,129 +60,73 @@ export default function BrowseUsers({ users, deleteUser, updateUser }) {
     };
 
     return (
-        <div style={{ display: "flex", flexDirection: "row", width: "100%" }}>
-            <div
-                style={{
-                    flexBasis: "100%",
-                    padding: "10px",
-                    transition: "flex-basis 0.3s ease-in-out",
-                }}
-            >
-                <h2>Browse Users</h2>
-
-                <input
-                    type="text"
+        <Box>
+            <Typography variant="h6" gutterBottom>
+                Browse Users
+            </Typography>
+            <Paper component="form" sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', mb: 2 }}>
+                <InputBase
+                    sx={{ ml: 1, flex: 1 }}
                     placeholder="Search by username..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
-
-                <select
+                <Select
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
-                    style={{
-                        marginLeft: "10px",
-                        padding: "5px",
-                        fontSize: "14px",
-                    }}
+                    sx={{ ml: 1 }}
                 >
-                    <option value="">All</option>
-                    <option value="regular">Regular</option>
-                    <option value="admin">Admin</option>
-                </select>
-
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        fontWeight: "bold",
-                        borderBottom: "2px solid #ddd",
-                        padding: "5px 10px",
-                        marginBottom: "10px",
-                    }}
-                >
-                    <span style={{ flexBasis: "15%", textAlign: "left" }}>Username</span>
-                    <span style={{ flexBasis: "15%", textAlign: "left" }}>Password</span>
-                    <span style={{ flexBasis: "15%", textAlign: "left" }}>ID</span>
-                    <span style={{ flexBasis: "15%", textAlign: "left" }}>Role</span>
-                    <span style={{ flexBasis: "10%", textAlign: "center" }}>Edit</span>
-                    <span style={{ flexBasis: "10%", textAlign: "center" }}>Tasks</span>
-                    <span style={{ flexBasis: "10%", textAlign: "center" }}>Actions</span>
-                </div>
-
-                <ul style={{ listStyle: "none", padding: 0 }}>
-                    {filteredUsers.length === 0 ? (
-                        <li>No users found</li>
-                    ) : (
-                        filteredUsers.map((user) => (
-                            <li
-                                key={user.userId}
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    marginBottom: "10px",
-                                    border: "1px solid #ddd",
-                                    borderRadius: "5px",
-                                    padding: "5px 10px",
-                                }}
-                            >
-                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.username}</span>
-                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.password}</span>
-                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.userId}</span>
-                                <span style={{ flexBasis: "15%", textAlign: "left" }}>{user.role}</span>
-                                <button
-                                    style={{
-                                        flexBasis: "10%",
-                                        backgroundColor: "#4CAF50",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                        padding: "5px",
-                                        cursor: "pointer",
-                                        textAlign: "center",
-                                        marginRight: "5px",
-                                    }}
-                                    onClick={() => handleEditUser(user)}
-                                >
-                                    <i className="fa-solid fa-pen"></i>
-                                </button>
-                                <button
-                                    style={{
-                                        flexBasis: "10%",
-                                        backgroundColor: "#2196F3",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                        padding: "5px",
-                                        cursor: "pointer",
-                                        textAlign: "center",
-                                        marginRight: "5px",
-                                    }}
-                                    onClick={() => handleSeeTasks(user)}
-                                >
-                                    <i className="fa-solid fa-list-check"></i>
-                                </button>
-                                <button
-                                    onClick={() => deleteUser(user.username)}
-                                    style={{
-                                        flexBasis: "10%",
-                                        backgroundColor: "#f44336",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "5px",
-                                        padding: "5px",
-                                        cursor: "pointer",
-                                        textAlign: "center",
-                                    }}
-                                >
-                                    <i className="fa-solid fa-trash"></i>
-                                </button>
-                            </li>
-                        ))
-                    )}
-                </ul>
-            </div>
+                    <MenuItem value="">All</MenuItem>
+                    <MenuItem value="regular">Regular</MenuItem>
+                    <MenuItem value="admin">Admin</MenuItem>
+                </Select>
+            </Paper>
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Username</TableCell>
+                            <TableCell>Password</TableCell>
+                            <TableCell>ID</TableCell>
+                            <TableCell>Role</TableCell>
+                            <TableCell align="center">Edit</TableCell>
+                            <TableCell align="center">Tasks</TableCell>
+                            <TableCell align="center">Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filteredUsers.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={7} align="center">No users found</TableCell>
+                            </TableRow>
+                        ) : (
+                            filteredUsers.map((user) => (
+                                <TableRow key={user.userId}>
+                                    <TableCell>{user.username}</TableCell>
+                                    <TableCell>{user.password}</TableCell>
+                                    <TableCell>{user.userId}</TableCell>
+                                    <TableCell>{user.role}</TableCell>
+                                    <TableCell align="center">
+                                        <IconButton onClick={() => handleEditUser(user)} color="primary">
+                                            <EditIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <IconButton onClick={() => handleSeeTasks(user)} color="primary">
+                                            <ListIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell align="center">
+                                        <IconButton onClick={() => deleteUser(user.username)} color="secondary">
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             {isEditUserModalOpen && (
                 <EditUser
@@ -197,6 +143,6 @@ export default function BrowseUsers({ users, deleteUser, updateUser }) {
                     onClose={handleCloseTasks}
                 />
             )}
-        </div>
+        </Box>
     );
 }

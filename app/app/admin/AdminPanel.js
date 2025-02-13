@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
+import { Container, Typography, Grid, Paper, Box } from "@mui/material";
 import BrowseUsers from "./BrowseUsers";
 import CreateUser from "./CreateUsers";
 import UserActivityLog from "./UserActivityLog";
@@ -23,7 +24,7 @@ export default function AdminPanel() {
         localStorage.setItem("users", JSON.stringify(usersData));
         fetchUsers(); 
     }, [fetchUsers]);
-
+    
     const deleteUser = useCallback((username) => {
         const usersData = JSON.parse(localStorage.getItem("users")) || {};
         delete usersData[username];
@@ -39,11 +40,33 @@ export default function AdminPanel() {
     }, [fetchUsers]);
 
     return (
-        <div>
-            <h1>Admin Panel</h1>
-            <CreateUser addUser={addUser} /> 
-            <BrowseUsers users={users} deleteUser={deleteUser} updateUser={updateUser} />
-            <UserActivityLog />
-        </div>
+        <Container>
+            <Typography variant="h4" component="h1" gutterBottom>
+                Admin Panel
+            </Typography>
+            <Grid container spacing={3} alignItems="flex-start">
+                <Grid item xs={12} md={6}>
+                    <Paper elevation={3} sx={{ height: '100%' }}>
+                        <Box p={2}>
+                            <CreateUser addUser={addUser} />
+                        </Box>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                    <Paper elevation={3} sx={{ height: '100%' }}>
+                        <Box p={2}>
+                            <BrowseUsers users={users} deleteUser={deleteUser} updateUser={updateUser} />
+                        </Box>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12}>
+                    <Paper elevation={3}>
+                        <Box p={2}>
+                            <UserActivityLog />
+                        </Box>
+                    </Paper>
+                </Grid>
+            </Grid>
+        </Container>
     );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Box, Button, TextField, Typography, Modal, Select, MenuItem, FormControl, InputLabel } from "@mui/material";
 
 export default function EditUser({ user, updateUser, onClose }) {
     const [username, setUsername] = useState(user.username);
@@ -13,35 +14,42 @@ export default function EditUser({ user, updateUser, onClose }) {
     };
 
     return (
-        <div className="modal-overlay">
-            <div className="modal-content">
-                <h2>Edit User</h2>
-                <label>
-                    Username:
-                    <input
-                        type="text"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                    />
-                </label>
-                <label>
-                    Password:
-                    <input
-                        type="text"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </label>
-                <label>
-                    Role:
-                    <select value={role} onChange={(e) => setRole(e.target.value)}>
-                        <option value="regular">Regular</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </label>
-                <button onClick={handleSave}>Save</button>
-                <button onClick={onClose}>Cancel</button>
-            </div>
-        </div>
+        <Modal open={true} onClose={onClose}>
+            <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4 }}>
+                <Typography variant="h6" component="h2" gutterBottom>
+                    Edit User
+                </Typography>
+                <TextField
+                    fullWidth
+                    label="Username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    margin="normal"
+                />
+                <TextField
+                    fullWidth
+                    label="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    margin="normal"
+                />
+                <FormControl fullWidth margin="normal">
+                    <InputLabel>Role</InputLabel>
+                    <Select value={role} onChange={(e) => setRole(e.target.value)}>
+                        <MenuItem value="regular">Regular</MenuItem>
+                        <MenuItem value="admin">Admin</MenuItem>
+                    </Select>
+                </FormControl>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+                    <Button variant="contained" color="primary" onClick={handleSave}>
+                        Save
+                    </Button>
+                    <Button variant="outlined" color="secondary" onClick={onClose}>
+                        Cancel
+                    </Button>
+                </Box>
+            </Box>
+        </Modal>
     );
 }

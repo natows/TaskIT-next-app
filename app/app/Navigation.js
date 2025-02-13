@@ -5,6 +5,8 @@ import { UserContext } from "./login/UserContext";
 import { NotificationContext } from "./NotificationContext";
 import ThemeSwitcher from "./ThemeSwitcher";
 import Notifications from "./Notifications";
+import { AppBar, Toolbar, Typography, IconButton, Badge, Button, Box } from "@mui/material";
+import { AccountCircle, Notifications as NotificationsIcon, ExitToApp as LogoutIcon } from "@mui/icons-material";
 
 export default function Navigation() {
     const { user, handleLogout } = useContext(UserContext);
@@ -20,38 +22,63 @@ export default function Navigation() {
     };
 
     return (
-        <div className="nav flex justify-between items-center bg-blue-500 text-white p-3 relative">
-            <Link href="/" className="text-2xl font-bold">TaskIt</Link>
-            <div className="flex items-center">
+        <AppBar position="static" sx={{ mb: 4 }}>
+            <Toolbar>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>TaskIt</Link>
+                </Typography>
                 <ThemeSwitcher />
                 {user !== null ? (
-                    <div className="flex items-center ml-4">
-                        <p className="mr-4">{user.isAdmin ? `Welcome Admin ${user.username}` : `Welcome ${user.username}`}</p>
-                        <button onClick={userToNull} className="bg-red-500 text-white py-1 px-4 rounded mr-2">Log out</button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                        <Typography variant="body1" sx={{ mr: 2 }}>
+                            {user.isAdmin ? `Welcome Admin ${user.username}` : `Welcome ${user.username}`}
+                        </Typography>
+                        <Button
+                            variant="contained"
+                            color="secondary"
+                            startIcon={<LogoutIcon />}
+                            onClick={userToNull}
+                            sx={{ mr: 2 }}
+                        >
+                            Log out
+                        </Button>
                         {!user.isAdmin && (
-                            <div><Link href="/account">
-                            <i className="fa-solid fa-user"></i>
-                            </Link>
-                            <button onClick={toggleNotifications} className="relative ml-4">
-                                <i className="fa-solid fa-bell"></i>
-                                {notifications.length > 0 && (
-                                    <span className="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
-                                        {notifications.length}
-                                    </span>
-                                )}
-                            </button>
-                            </div>
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                <IconButton color="inherit" component={Link} href="/account">
+                                    <AccountCircle />
+                                </IconButton>
+                                <IconButton color="inherit" onClick={toggleNotifications}>
+                                    <Badge badgeContent={notifications.length} color="error">
+                                        <NotificationsIcon />
+                                    </Badge>
+                                </IconButton>
+                            </Box>
                         )}
                         {showNotifications && !user.isAdmin && (
-                            <div className="notif absolute top-12 right-0 bg-white text-black p-4 rounded shadow-lg w-64 z-10">
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: '50px',
+                                    right: '10px',
+                                    bgcolor: 'background.paper',
+                                    color: 'text.primary',
+                                    p: 2,
+                                    borderRadius: 1,
+                                    boxShadow: 3,
+                                    zIndex: 10,
+                                    width: '300px'
+                                }}
+                            >
                                 <Notifications />
-                            </div>
+                            </Box>
                         )}
-                    </div>
+                    </Box>
                 ) : (
-                    <Link href="/login" className="text-white text-lg ml-4">Log in</Link>
+                    <Button color="inherit" component={Link} href="/login">
+                        Log in
+                    </Button>
                 )}
-            </div>
-        </div>
+            </Toolbar>
+        </AppBar>
     );
 }

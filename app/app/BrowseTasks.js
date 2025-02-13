@@ -76,12 +76,12 @@ export default function BrowseTasks() {
                 />
             </div>
             {isVisible && (
-                <ul className="border border-gray-300 overflow-y-auto p-0 mt-2">
+                <ul className="border border-gray-300 overflow-y-auto p-0 mt-2 bg-white task-list">
                     {filteredTasks.length > 0 ? (
                         filteredTasks.map((task, index) => (
                             <li
                                 key={index}
-                                className="p-2 cursor-pointer hover:bg-gray-100"
+                                className="p-2 cursor-pointer hover:bg-gray-100 bg-white task-list-item"
                                 onClick={() => setSearchQuery(task.name)}
                             >
                                 <div className="flex flex-col">
@@ -93,7 +93,7 @@ export default function BrowseTasks() {
                             </li>
                         ))
                     ) : (
-                        <p className="p-2">No tasks found</p>
+                        <p className="p-2 bg-white task-list-item">No tasks found</p>
                     )}
                 </ul>
             )}

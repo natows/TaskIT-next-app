@@ -11,12 +11,12 @@ export function logIn(login, password, logUserActivity) {
 
             localStorage.setItem("user", JSON.stringify(currentUserData));
             logUserActivity(`User ${login} logged in`);
-            return currentUserData;
+            return { success: true, userData: currentUserData };
         } else {
-            throw new Error("Invalid password");
+            return { success: false, message: "Invalid password" };
         }
     } else {
-        throw new Error("User does not exist");
+        return { success: false, message: "User does not exist" };
     }
 }
 
@@ -24,7 +24,7 @@ export function signIn(email, password, logUserActivity) {
     const users = JSON.parse(localStorage.getItem("users")) || {};
 
     if (users[email]) {
-        throw new Error("User already exists");
+        return { success: false, message: "User already exists" };
     }
 
     const newUserId = Date.now().toString();
@@ -47,7 +47,7 @@ export function signIn(email, password, logUserActivity) {
 
     localStorage.setItem("user", JSON.stringify(currentUserData));
     logUserActivity(`User ${email} registered and logged in`);
-    return currentUserData;
+    return { success: true, userData: currentUserData };
 }
 
 export function currentUser() {

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useContext, useState } from "react";
+import { useRef, useContext, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { UserContext } from "./UserContext"; 
 
@@ -8,21 +8,31 @@ export default function LoginPage() {
     const loginPrompt = useRef();
     const passwordPrompt = useRef();
     const { handleLogin } = useContext(UserContext); 
+    const [errorMessage, setErrorMessage] = useState("");
+
+    useEffect(() => {
+        if (errorMessage) {
+            const timer = setTimeout(() => {
+                setErrorMessage("");
+            }, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [errorMessage]);
 
     function loginOnClick() {
         const login = loginPrompt.current.value.trim();
         const password = passwordPrompt.current.value.trim();
 
         if (!login || !password) {
-            alert("Please provide both username and password");
+            setErrorMessage("Please provide both username and password");
             return;
         }
 
-        try {
-            handleLogin(login, password); 
+        const result = handleLogin(login, password);
+        if (result.success) {
             router.push("/");
-        } catch (error) {
-            alert(error.message);
+        } else {
+            setErrorMessage(result.message);
         }
     }
 
@@ -33,15 +43,17 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="min-h-screen flex justify-center items-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm">
+        <div className="min-h-screen flex justify-center items-center bg-gray-100 dark:bg-gray-900 overflow-hidden">
+            <div className="modal-content">
                 <h2 className="text-2xl font-bold text-center mb-6">Log into your account</h2>
+
+                {errorMessage && <p className="text-red-500 text-center mb-4">{errorMessage}</p>}
 
                 <input
                     ref={loginPrompt}
                     type="text"
                     placeholder="Your username"
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     onKeyDown={handleKeyDown}
                 />
 
@@ -49,7 +61,7 @@ export default function LoginPage() {
                     ref={passwordPrompt}
                     type="password"
                     placeholder="Your password"
-                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full p-3 mb-4 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                     onKeyDown={handleKeyDown}
                 />
 

@@ -1,10 +1,10 @@
 "use client";
-import { useReducer, useEffect, useContext, useMemo, useState } from "react";
+import { useReducer, useEffect, useContext, useMemo, lazy, Suspense } from "react";
 import { useParams } from "next/navigation";
 import { UserContext } from "../login/UserContext";
 import { UserActivityContext } from "../admin/UserActivityContext";
-import SortingTasks from "./SortingTasks";
-import Attachments from "./Attachments";
+const SortingTasks = lazy(() => import("./SortingTasks"));
+const Attachments = lazy(() => import("./Attachments"));
 
 const initialState = {
     taskList: [],
@@ -256,7 +256,9 @@ export default function DayEditing() {
     return (
         <div className="p-4">
             <h2 className="text-2xl font-bold mb-4">Tasks for {date}</h2>
-            <SortingTasks onSort={handleSort} />
+            <Suspense fallback={<div>Loading...</div>}>
+                <SortingTasks onSort={handleSort} />
+            </Suspense>
             <div className="flex mb-4">
                 <input
                     type="text"
@@ -335,7 +337,9 @@ export default function DayEditing() {
                                             className={`w-4 h-4 rounded-full ${task.priority === "high" ? "bg-red-500" : "bg-red-200"}`}
                                         ></button>
                                     </div>
-                                    <Attachments taskIndex={index} attachments={state.attachments} setAttachments={(attachments) => dispatch({ type: "SET_ATTACHMENTS", attachments })} />
+                                    <Suspense fallback={<div>Loading...</div>}>
+                                        <Attachments taskIndex={index} attachments={state.attachments} setAttachments={(attachments) => dispatch({ type: "SET_ATTACHMENTS", attachments })} />
+                                    </Suspense>
                                     <button onClick={() => openShareModal(index)} className="bg-blue-500 text-white py-1 px-3 rounded"><i className="fa-solid fa-share"></i></button>
                                 </div>
                             </div>
