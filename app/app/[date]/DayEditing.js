@@ -5,6 +5,7 @@ import { UserContext } from "../login/UserContext";
 import { UserActivityContext } from "../admin/UserActivityContext";
 const SortingTasks = lazy(() => import("./SortingTasks"));
 const Attachments = lazy(() => import("./Attachments"));
+import CommentModal from "./CommentModal";
 
 const initialState = {
     taskList: [],
@@ -25,6 +26,9 @@ const initialState = {
     taskToShareIndex: null,
     shareWithUsername: "",
     shareMessage: "",
+    isCommentModalOpen: false,
+    currentCommentTaskIndex: null,
+    commentInput: "",
 };
 
 function reducer(state, action) {
@@ -43,6 +47,12 @@ function reducer(state, action) {
             return { ...state, isShareModalOpen: false, taskToShareIndex: null, shareWithUsername: "", shareMessage: "" };
         case "SET_SHARE_MESSAGE":
             return { ...state, shareMessage: action.message };
+        case "OPEN_COMMENT_MODAL":
+            return { ...state, isCommentModalOpen: true, currentCommentTaskIndex: action.taskIndex };
+        case "CLOSE_COMMENT_MODAL":
+            return { ...state, isCommentModalOpen: false, currentCommentTaskIndex: null, commentInput: "" };
+        case "SET_COMMENT_INPUT":
+            return { ...state, commentInput: action.value };
         default:
             return state;
     }
@@ -56,16 +66,37 @@ export default function DayEditing() {
 
     useEffect(() => {
         if (!user) return;
-
+        const users = JSON.parse(localStorage.getItem("users")) || {};
         const userId = user.userId;
         const storedData = localStorage.getItem(userId);
         const parsedData = storedData ? JSON.parse(storedData) : { tasksByDate: {} };
-
+    
         if (parsedData.tasksByDate[date]) {
-            dispatch({ type: "SET_TASK_LIST", taskList: parsedData.tasksByDate[date].tasks || [] });
-            dispatch({ type: "SET_ATTACHMENTS", attachments: parsedData.tasksByDate[date].attachments || {} });
+            const taskList = parsedData.tasksByDate[date].tasks || [];
+            const attachments = parsedData.tasksByDate[date].attachments || {};
+    
+            taskList.forEach(task => {
+                if (task.sharedWith) {
+                    Object.keys(task.sharedWith).forEach(sharedUsername => {
+                        const sharedUser = Object.values(users).find(user => user.username === sharedUsername);
+                        if (sharedUser) {
+                            const sharedUserId = sharedUser.userId;
+                            const sharedUserData = JSON.parse(localStorage.getItem(sharedUserId)) || { tasksByDate: {} };
+                            const sharedUserComments = sharedUserData.tasksByDate[date]?.tasks.find(t => t.name === task.name)?.comments || [];
+                            if (Array.isArray(task.comments)) {
+                                task.comments = [...new Set([...task.comments, ...sharedUserComments])];
+                            } else {
+                                task.comments = [...new Set([...sharedUserComments])];
+                            }
+                        }
+                    });
+                }
+            });
+    
+            dispatch({ type: "SET_TASK_LIST", taskList });
+            dispatch({ type: "SET_ATTACHMENTS", attachments });
         }
-
+    
         dispatch({ type: "SET_FIELD", field: "isHydrated", value: true });
     }, [date, user]);
 
@@ -225,25 +256,80 @@ export default function DayEditing() {
         const task = state.taskList[taskIndex];
         const users = JSON.parse(localStorage.getItem("users")) || {};
         const sharedUser = Object.values(users).find(user => user.username === state.shareWithUsername);
-
+    
         if (!sharedUser) {
             dispatch({ type: "SET_SHARE_MESSAGE", message: "User not found" });
             return;
         }
-
+    
         const sharedUserId = sharedUser.userId;
         const sharedUserData = JSON.parse(localStorage.getItem(sharedUserId)) || { tasksByDate: {} };
-
+    
         if (!sharedUserData.tasksByDate[date]) {
             sharedUserData.tasksByDate[date] = { tasks: [], attachments: {} };
         }
-
-        sharedUserData.tasksByDate[date].tasks.push(task);
+    
+        const updatedTask = { ...task, sharedWith: { ...task.sharedWith, [state.shareWithUsername]: true } };
+        const updatedSharedTask = { ...task, sharedWith: { ...task.sharedWith, [user.username]: true } };
+    
+        const updatedTaskList = [...state.taskList];
+        updatedTaskList[taskIndex] = updatedTask;
+    
+        dispatch({ type: "SET_TASK_LIST", taskList: updatedTaskList });
+    
+        sharedUserData.tasksByDate[date].tasks.push(updatedSharedTask);
         localStorage.setItem(sharedUserId, JSON.stringify(sharedUserData));
-
+    
+        const sharedUserComments = sharedUserData.tasksByDate[date].tasks.find(t => t.name === task.name)?.comments || [];
+        const mergedComments = [...new Set([...task.comments, ...sharedUserComments])];
+    
+        updatedTaskList[taskIndex] = { ...updatedTaskList[taskIndex], comments: mergedComments };
+        dispatch({ type: "SET_TASK_LIST", taskList: updatedTaskList });
+    
         logUserActivity(`User ${user.username} shared task "${task.name}" with ${state.shareWithUsername}`);
         dispatch({ type: "SET_SHARE_MESSAGE", message: `Task "${task.name}" shared with ${state.shareWithUsername}` });
     };
+    const openCommentModal = (taskIndex) => {
+        dispatch({ type: "OPEN_COMMENT_MODAL", taskIndex });
+    };
+
+    const closeCommentModal = () => {
+        dispatch({ type: "CLOSE_COMMENT_MODAL" });
+    };
+
+    const handleCommentInputChange = (e) => {
+        dispatch({ type: "SET_COMMENT_INPUT", value: e.target.value });
+    };
+
+    const saveComment = () => {
+        if (state.currentCommentTaskIndex !== null) {
+            const updatedList = [...state.taskList];
+            const task = updatedList[state.currentCommentTaskIndex];
+            const comments = task.comments || [];
+            const newComment = `${user.username}: ${state.commentInput}`;
+            comments.push(newComment);
+            updatedList[state.currentCommentTaskIndex] = {
+                ...task,
+                comments: comments
+            };
+            dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+            dispatch({ type: "SET_FIELD", field: "commentInput", value: "" }); 
+        }
+    };
+    const deleteComment = (commentIndex) => {
+        if (state.currentCommentTaskIndex !== null) {
+            const updatedList = [...state.taskList];
+            const task = updatedList[state.currentCommentTaskIndex];
+            const comments = task.comments || [];
+            comments.splice(commentIndex, 1);
+            updatedList[state.currentCommentTaskIndex] = {
+                ...task,
+                comments: comments
+            };
+            dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
+        }
+    };
+
 
     if (!user) {
         return <p>Please log in to manage tasks.</p>;
@@ -253,158 +339,167 @@ export default function DayEditing() {
         return null;
     }
 
+    
+
     return (
-        <div className="p-4">
-            <h2 className="text-2xl font-bold mb-4">Tasks for {date}</h2>
+        <div className="p-6 min-h-screen bg-gradient-to-r from-blue-100 to-blue-200 dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-900">
+            <h2 className="textt text-3xl font-bold mb-6 text-center text-gray-800 dark:text-gray-200">Tasks for {date}</h2>
             <Suspense fallback={<div>Loading...</div>}>
                 <SortingTasks onSort={handleSort} />
             </Suspense>
-            <div className="flex mb-4">
+            <div className="flex mb-6 items-center">
                 <input
                     type="text"
                     value={state.newTask}
                     onChange={(e) => dispatch({ type: "SET_FIELD", field: "newTask", value: e.target.value })}
                     placeholder="New task"
                     onKeyDown={(e) => handleKeyDown(e, 1)}
-                    className="border rounded p-2 flex-grow mr-2"
+                    className="border rounded-lg p-3 flex-grow mr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
                 <select
                     value={state.priority}
                     onChange={(e) => dispatch({ type: "SET_FIELD", field: "priority", value: e.target.value })}
-                    className="border rounded p-2 mr-2"
+                    className="border rounded-lg p-3 mr-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 >
                     <option value="low">Low</option>
                     <option value="normal">Normal</option>
                     <option value="high">High</option>
                 </select>
-                <button onClick={addTask} className="bg-blue-500 text-white py-2 px-4 rounded mr-2">Add task</button>
+                <button onClick={addTask} className="bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">Add task</button>
                 <input
                     type="text"
                     value={state.searchQuery}
                     onChange={(e) => dispatch({ type: "SET_FIELD", field: "searchQuery", value: e.target.value })}
                     placeholder="Search tasks"
-                    className="border rounded p-2 flex-grow"
+                    className="border rounded-lg p-3 flex-grow ml-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 />
             </div>
-            <h3 className="text-xl font-semibold mb-2">Task List</h3>
+            <h3 className="textt text-2xl font-semibold mb-4 text-gray-700 dark:text-gray-300">Task List</h3>
             <ul>
                 {filteredTasks.map((task, index) => (
-                    <li key={index} className="flex justify-between items-center mb-2 p-2 border rounded">
-                        {state.editTaskIndex === index ? (
-                            <div className="flex items-center w-full justify-end">
-                                <input
-                                    type="text"
-                                    value={state.editedTask}
-                                    onChange={(e) => dispatch({ type: "SET_FIELD", field: "editedTask", value: e.target.value })}
-                                    onKeyDown={(e) => handleKeyDown(e, 2)}
-                                    className="border rounded p-2 mr-2"
-                                />
-                                <button onClick={updateTask} className="bg-green-500 text-white py-1 px-3 rounded">Update</button>
+                    <li key={index} className="task-item flex justify-between items-center mb-4 p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm">
+                        <span className="textt flex-grow text-lg text-gray-800 dark:text-gray-200">{task.name}</span>
+                        <div className="flex items-center justify-end gap-4">
+                            <button onClick={() => openCommentModal(index)} className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                                <i className="fa-solid fa-comment"></i>
+                            </button>
+                            <button onClick={() => removeTask(index)} className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                                <i className="fa-solid fa-trash"></i>
+                            </button>
+                            <button onClick={() => handleEditTask(task, index)} className="bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                                <i className="fa-solid fa-pen"></i>
+                            </button>
+                            {task.done ? (
+                                <button
+                                    className="bg-green-300 hover:bg-green-400 text-black py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                                    onClick={() => toggleTaskStatus(task)}
+                                >
+                                    <i className="fa-regular fa-circle-check"></i>
+                                </button>
+                            ) : (
+                                <button onClick={() => toggleTaskStatus(task)} className="bg-gray-300 hover:bg-gray-400 text-black py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                                    <i className="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            )}
+                            <button
+                                onClick={() => handleDescriptionClick(index)}
+                                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                            >
+                                {state.showDescriptions[index] ? <i className="fa-solid fa-x"></i> : <i className="fa-regular fa-note-sticky"></i>}
+                            </button>
+                            <div className="flex gap-2 ml-4">
+                                <button
+                                    onClick={() => handlePrioritySet(index, "low")}
+                                    className={`w-6 h-6 rounded-full ${task.priority === "low" ? "bg-yellow-400" : "bg-yellow-200"} shadow-md`}
+                                ></button>
+                                <button
+                                    onClick={() => handlePrioritySet(index, "normal")}
+                                    className={`w-6 h-6 rounded-full ${task.priority === "normal" ? "bg-green-500" : "bg-green-200"} shadow-md`}
+                                ></button>
+                                <button
+                                    onClick={() => handlePrioritySet(index, "high")}
+                                    className={`w-6 h-6 rounded-full ${task.priority === "high" ? "bg-red-500" : "bg-red-200"} shadow-md`}
+                                ></button>
                             </div>
-                        ) : (
-                            <div className="flex items-center w-full justify-between">
-                                <span className="flex-grow" style={{ fontSize: '1.3rem' }}>{task.name}</span>
-                                <div className="flex items-center justify-end gap-2">
-                                    <button onClick={() => removeTask(index)} className="bg-red-500 text-white py-1 px-3 rounded mr-2"><i className="fa-solid fa-trash"></i></button>
-                                    <button onClick={() => handleEditTask(task, index)} className="bg-yellow-500 text-white py-1 px-3 rounded mr-2"><i className="fa-solid fa-pen"></i></button>
-                                    {task.done ? (
-                                        <button
-                                            className="bg-green-300 text-black py-1 px-3 rounded mr-2"
-                                            onClick={() => toggleTaskStatus(task)}
-                                        >
-                                            <i className="fa-regular fa-circle-check"></i>
-                                        </button>
-                                    ) : (
-                                        <button onClick={() => toggleTaskStatus(task)} className="bg-gray-300 text-black py-1 px-3 rounded mr-2"><i className="fa-solid fa-circle-xmark"></i></button>
-                                    )}
-                                    <button
-                                        onClick={() => handleDescriptionClick(index)}
-                                        className="bg-blue-500 text-white py-1 px-3 rounded mr-2"
-                                    >
-                                        {state.showDescriptions[index] ? <i className="fa-solid fa-x"></i> : <i className="fa-regular fa-note-sticky"></i>}
-                                    </button>
-                                    <div className="flex gap-2 ml-4">
-                                        <button
-                                            onClick={() => handlePrioritySet(index, "low")}
-                                            className={`w-4 h-4 rounded-full ${task.priority === "low" ? "bg-yellow-400" : "bg-yellow-200"}`}
-                                        ></button>
-                                        <button
-                                            onClick={() => handlePrioritySet(index, "normal")}
-                                            className={`w-4 h-4 rounded-full ${task.priority === "normal" ? "bg-green-500" : "bg-green-200"}`}
-                                        ></button>
-                                        <button
-                                            onClick={() => handlePrioritySet(index, "high")}
-                                            className={`w-4 h-4 rounded-full ${task.priority === "high" ? "bg-red-500" : "bg-red-200"}`}
-                                        ></button>
-                                    </div>
-                                    <Suspense fallback={<div>Loading...</div>}>
-                                        <Attachments taskIndex={index} attachments={state.attachments} setAttachments={(attachments) => dispatch({ type: "SET_ATTACHMENTS", attachments })} />
-                                    </Suspense>
-                                    <button onClick={() => openShareModal(index)} className="bg-blue-500 text-white py-1 px-3 rounded"><i className="fa-solid fa-share"></i></button>
-                                </div>
-                            </div>
-                        )}
+                            <Suspense fallback={<div>Loading...</div>}>
+                                <Attachments taskIndex={index} attachments={state.attachments} setAttachments={(attachments) => dispatch({ type: "SET_ATTACHMENTS", attachments })} />
+                            </Suspense>
+                            <button onClick={() => openShareModal(index)} className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                                <i className="fa-solid fa-share"></i>
+                            </button>
+                        </div>
                     </li>
                 ))}
             </ul>
             {state.isDescriptionModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2 className="text-xl font-bold mb-4">Edit Description</h2>
+                <div className="modal-overlay fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+                    <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Edit Description</h2>
                         <textarea
                             value={state.descriptionInput}
                             onChange={(e) => dispatch({ type: "SET_FIELD", field: "descriptionInput", value: e.target.value })}
-                            className="border rounded p-2 w-full mb-4"
+                            className="border rounded-lg p-3 w-full mb-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             rows="4"
                         />
-                        <button onClick={handleDescriptionSave} className="bg-green-500 text-white py-2 px-4 rounded mr-2">
+                        <button onClick={handleDescriptionSave} className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                             Save
                         </button>
-                        <button onClick={() => dispatch({ type: "SET_FIELD", field: "isDescriptionModalOpen", value: false })} className="bg-gray-500 text-white py-2 px-4 rounded">
+                        <button onClick={() => dispatch({ type: "SET_FIELD", field: "isDescriptionModalOpen", value: false })} className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                             Close
                         </button>
                     </div>
                 </div>
             )}
             {state.isEditTaskModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2 className="text-xl font-bold mb-4">Edit Task</h2>
+                <div className="modal-overlay fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+                    <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Edit Task</h2>
                         <input
                             type="text"
                             value={state.editedTask}
                             onChange={(e) => dispatch({ type: "SET_FIELD", field: "editedTask", value: e.target.value })}
-                            className="border rounded p-2 w-full mb-4"
+                            className="border rounded-lg p-3 w-full mb-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
-                        <button onClick={updateTask} className="bg-green-500 text-white py-2 px-4 rounded mr-2">
+                        <button onClick={updateTask} className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                             Save
                         </button>
-                        <button onClick={() => dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: false })} className="bg-gray-500 text-white py-2 px-4 rounded">
+                        <button onClick={() => dispatch({ type: "SET_FIELD", field: "isEditTaskModalOpen", value: false })} className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                             Close
                         </button>
                     </div>
                 </div>
             )}
             {state.isShareModalOpen && (
-                <div className="modal-overlay">
-                    <div className="modal-content">
-                        <h2 className="text-xl font-bold mb-4">Share Task</h2>
+                <div className="modal-overlay fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
+                    <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Share Task</h2>
                         <input
                             type="text"
                             value={state.shareWithUsername}
                             onChange={(e) => dispatch({ type: "SET_FIELD", field: "shareWithUsername", value: e.target.value })}
                             placeholder="Username to share with"
-                            className="border rounded p-2 w-full mb-4"
+                            className="border rounded-lg p-3 w-full mb-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                         />
-                        <button onClick={shareTask} className="bg-blue-500 text-white py-2 px-4 rounded mr-2">
+                        <button onClick={shareTask} className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                             Share
                         </button>
-                        <button onClick={closeShareModal} className="bg-gray-500 text-white py-2 px-4 rounded">
+                        <button onClick={closeShareModal} className="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                             Close
                         </button>
                         {state.shareMessage && <p className="mt-2 text-red-500">{state.shareMessage}</p>}
                     </div>
                 </div>
+            )}
+            {state.isCommentModalOpen && (
+                <CommentModal
+                    comments={state.taskList[state.currentCommentTaskIndex]?.comments || []}
+                    commentInput={state.commentInput}
+                    onCommentInputChange={handleCommentInputChange}
+                    onSaveComment={saveComment}
+                    onClose={closeCommentModal}
+                    onDeleteComment={deleteComment}
+                    currentUser={user.username}
+                />
             )}
         </div>
     );

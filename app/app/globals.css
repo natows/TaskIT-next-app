@@ -124,7 +124,7 @@ input, select {
   color: #ffffff;
 }
 
-/* Dodane style dla listy zadań w trybie ciemnym */
+
 [data-theme="dark"] .task-list {
   background-color: #2a2a2a;
   color: #ffffff;
@@ -137,4 +137,33 @@ input, select {
 
 [data-theme="dark"] .task-list-item:hover {
   background-color: #444444;
+}
+
+
+.dark\:bg-gradient-to-r {
+  background-image: linear-gradient(to right, var(--background-color), var(--background-color));
+}
+
+.dark\:from-gray-800 {
+  --tw-gradient-from: #2a2a2a;
+}
+
+.dark\:to-gray-900 {
+  --tw-gradient-to: #1a1a1a;
+}
+
+.textt {
+  color: #000000;
+}
+[data-theme="dark"] .textt{
+  color:white
+}
+
+.task-item {
+  background-color: #ffffff;
+  color: #000000;
+}
+[data-theme="dark"] .task-item {
+  background-color: #333333;
+  color: #ffffff;
 }
