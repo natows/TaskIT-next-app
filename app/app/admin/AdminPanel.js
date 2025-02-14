@@ -46,15 +46,15 @@ export default function AdminPanel() {
             </Typography>
             <Grid container spacing={3} alignItems="flex-start">
                 <Grid item xs={12} md={6}>
-                    <Paper elevation={3} sx={{ height: '100%' }}>
-                        <Box p={2}>
+                    <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
+                        <Box p={2} sx={{ flexGrow: 1 }}>
                             <CreateUser addUser={addUser} />
                         </Box>
                     </Paper>
                 </Grid>
                 <Grid item xs={12} md={6}>
-                    <Paper elevation={3} sx={{ height: '100%' }}>
-                        <Box p={2}>
+                    <Paper elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
+                        <Box p={2} sx={{ flexGrow: 1, overflowY: 'auto' }}>
                             <BrowseUsers users={users} deleteUser={deleteUser} updateUser={updateUser} />
                         </Box>
                     </Paper>

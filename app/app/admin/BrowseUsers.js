@@ -1,62 +1,86 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useReducer, useEffect, useContext } from "react";
 import { Box, Button, IconButton, InputBase, Paper, Select, MenuItem, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from "@mui/material";
 import { Edit as EditIcon, Delete as DeleteIcon, List as ListIcon } from "@mui/icons-material";
 import EditUser from "./EditUser";
 import UserTasksModal from "./UserTasksModal";
 import { UserContext } from "../login/UserContext";
 
+const initialState = {
+    searchTerm: "",
+    roleFilter: "",
+    selectedUser: null,
+    userTasks: [],
+    isEditUserModalOpen: false,
+    isUserTasksModalOpen: false,
+};
+
+function reducer(state, action) {
+    switch (action.type) {
+        case "SET_SEARCH_TERM":
+            return { ...state, searchTerm: action.payload };
+        case "SET_ROLE_FILTER":
+            return { ...state, roleFilter: action.payload };
+        case "SET_SELECTED_USER":
+            return { ...state, selectedUser: action.payload };
+        case "SET_USER_TASKS":
+            return { ...state, userTasks: action.payload };
+        case "TOGGLE_EDIT_USER_MODAL":
+            return { ...state, isEditUserModalOpen: !state.isEditUserModalOpen };
+        case "TOGGLE_USER_TASKS_MODAL":
+            return { ...state, isUserTasksModalOpen: !state.isUserTasksModalOpen };
+        case "RESET_SELECTED_USER":
+            return { ...state, selectedUser: null, userTasks: [] };
+        default:
+            return state;
+    }
+}
+
 export default function BrowseUsers({ users, deleteUser, updateUser }) {
     const { user } = useContext(UserContext);
-    const [searchTerm, setSearchTerm] = useState("");
-    const [roleFilter, setRoleFilter] = useState("");
-    const [selectedUser, setSelectedUser] = useState(null);
-    const [userTasks, setUserTasks] = useState([]);
-    const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
-    const [isUserTasksModalOpen, setIsUserTasksModalOpen] = useState(false);
+    const [state, dispatch] = useReducer(reducer, initialState);
 
     const currentUser = user;
 
     const filteredUsers = users.filter((user) => {
-        const matchesUsername = user.username.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesRole = roleFilter ? user.role === roleFilter : true;
+        const matchesUsername = user.username.toLowerCase().includes(state.searchTerm.toLowerCase());
+        const matchesRole = state.roleFilter ? user.role === state.roleFilter : true;
         const isNotCurrentUser = user.username !== currentUser?.username; 
         return matchesUsername && matchesRole && isNotCurrentUser;
     });
 
     useEffect(() => {
-        if (selectedUser) {
-            const tasksData = JSON.parse(localStorage.getItem(selectedUser.userId));
+        if (state.selectedUser) {
+            const tasksData = JSON.parse(localStorage.getItem(state.selectedUser.userId));
 
             if (tasksData && tasksData.tasksByDate) {
                 const allTasks = Object.values(tasksData.tasksByDate)
                     .flatMap(dateGroup => dateGroup.tasks);
-                setUserTasks(allTasks);
+                dispatch({ type: "SET_USER_TASKS", payload: allTasks });
             } else {
-                setUserTasks([]);
+                dispatch({ type: "SET_USER_TASKS", payload: [] });
             }
         }
-    }, [selectedUser]);
+    }, [state.selectedUser]);
 
     const handleSeeTasks = (user) => {
-        setSelectedUser(user);
-        setIsUserTasksModalOpen(true);
+        dispatch({ type: "SET_SELECTED_USER", payload: user });
+        dispatch({ type: "TOGGLE_USER_TASKS_MODAL" });
     };
 
     const handleCloseTasks = () => {
-        setSelectedUser(null);
-        setUserTasks([]);
-        setIsUserTasksModalOpen(false);
+        dispatch({ type: "RESET_SELECTED_USER" });
+        dispatch({ type: "TOGGLE_USER_TASKS_MODAL" });
     };
 
     const handleEditUser = (user) => {
-        setSelectedUser(user);
-        setIsEditUserModalOpen(true);
+        dispatch({ type: "SET_SELECTED_USER", payload: user });
+        dispatch({ type: "TOGGLE_EDIT_USER_MODAL" });
     };
 
     const handleCloseEditUser = () => {
-        setIsEditUserModalOpen(false);
-        setSelectedUser(null);
+        dispatch({ type: "TOGGLE_EDIT_USER_MODAL" });
+        dispatch({ type: "RESET_SELECTED_USER" });
     };
 
     return (
@@ -68,12 +92,12 @@ export default function BrowseUsers({ users, deleteUser, updateUser }) {
                 <InputBase
                     sx={{ ml: 1, flex: 1 }}
                     placeholder="Search by username..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    value={state.searchTerm}
+                    onChange={(e) => dispatch({ type: "SET_SEARCH_TERM", payload: e.target.value })}
                 />
                 <Select
-                    value={roleFilter}
-                    onChange={(e) => setRoleFilter(e.target.value)}
+                    value={state.roleFilter}
+                    onChange={(e) => dispatch({ type: "SET_ROLE_FILTER", payload: e.target.value })}
                     sx={{ ml: 1 }}
                 >
                     <MenuItem value="">All</MenuItem>
@@ -81,8 +105,8 @@ export default function BrowseUsers({ users, deleteUser, updateUser }) {
                     <MenuItem value="admin">Admin</MenuItem>
                 </Select>
             </Paper>
-            <TableContainer component={Paper}>
-                <Table>
+            <TableContainer component={Paper} sx={{ maxHeight: 250 }}>
+                <Table stickyHeader>
                     <TableHead>
                         <TableRow>
                             <TableCell>Username</TableCell>
@@ -128,18 +152,18 @@ export default function BrowseUsers({ users, deleteUser, updateUser }) {
                 </Table>
             </TableContainer>
 
-            {isEditUserModalOpen && (
+            {state.isEditUserModalOpen && (
                 <EditUser
-                    user={selectedUser}
+                    user={state.selectedUser}
                     updateUser={updateUser}
                     onClose={handleCloseEditUser}
                 />
             )}
 
-            {isUserTasksModalOpen && (
+            {state.isUserTasksModalOpen && (
                 <UserTasksModal
-                    user={selectedUser}
-                    tasks={userTasks}
+                    user={state.selectedUser}
+                    tasks={state.userTasks}
                     onClose={handleCloseTasks}
                 />
             )}

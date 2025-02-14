@@ -6,6 +6,8 @@ import { UserActivityContext } from "../admin/UserActivityContext";
 const SortingTasks = lazy(() => import("./SortingTasks"));
 const Attachments = lazy(() => import("./Attachments"));
 import CommentModal from "./CommentModal";
+import { NotificationContext } from "../NotificationContext";
+
 
 const initialState = {
     taskList: [],
@@ -62,7 +64,7 @@ export default function DayEditing() {
     const { date } = useParams();
     const { user } = useContext(UserContext);
     const { logUserActivity } = useContext(UserActivityContext);
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const { addNotification } = useContext(NotificationContext);     const [state, dispatch] = useReducer(reducer, initialState);
 
     useEffect(() => {
         if (!user) return;
@@ -121,6 +123,10 @@ export default function DayEditing() {
             dispatch({ type: "SET_FIELD", field: "newTask", value: "" });
             dispatch({ type: "SET_FIELD", field: "priority", value: "normal" });
             logUserActivity(`User ${user.username} created a task: "${newTask.name}"`);
+
+            if (newTask.priority === "high") {
+                addNotification(`Task "${newTask.name}" with high priority is due today!`, "high");
+            }
         }
     };
 
@@ -179,6 +185,10 @@ export default function DayEditing() {
         );
         dispatch({ type: "SET_TASK_LIST", taskList: updatedList });
         logUserActivity(`User ${user.username} marked task "${task.name}" as ${task.done ? "not done" : "done"}`);
+
+        if (updatedList.every(task => task.done)) {
+            addNotification(`All tasks for ${date} are done!`, "success");
+        }
     };
 
     const addDescription = (index) => {
@@ -380,6 +390,16 @@ export default function DayEditing() {
                     <li key={index} className="task-item flex justify-between items-center mb-4 p-4 border rounded-lg bg-white dark:bg-gray-800 shadow-sm">
                         <span className="textt flex-grow text-lg text-gray-800 dark:text-gray-200">{task.name}</span>
                         <div className="flex items-center justify-end gap-4">
+                        {task.sharedWith ? (
+                                <div className="relative group">
+                                    <button className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                                        <i className="fa-solid fa-users"></i>
+                                    </button>
+                                    <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-700 text-white text-sm rounded py-2 px-3">
+                                        Shared with: {Object.keys(task.sharedWith).join(", ")}
+                                    </div>
+                                </div>
+                            ) : null}
                             <button onClick={() => openCommentModal(index)} className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-full shadow-md transition duration-300 ease-in-out transform hover:scale-105">
                                 <i className="fa-solid fa-comment"></i>
                             </button>
@@ -434,7 +454,7 @@ export default function DayEditing() {
             {state.isDescriptionModalOpen && (
                 <div className="modal-overlay fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
                     <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Edit Description</h2>
+                        <h2 className="textt text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Edit Description</h2>
                         <textarea
                             value={state.descriptionInput}
                             onChange={(e) => dispatch({ type: "SET_FIELD", field: "descriptionInput", value: e.target.value })}
@@ -453,7 +473,7 @@ export default function DayEditing() {
             {state.isEditTaskModalOpen && (
                 <div className="modal-overlay fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
                     <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Edit Task</h2>
+                        <h2 className="textt text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Edit Task</h2>
                         <input
                             type="text"
                             value={state.editedTask}
@@ -472,7 +492,7 @@ export default function DayEditing() {
             {state.isShareModalOpen && (
                 <div className="modal-overlay fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
                     <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Share Task</h2>
+                        <h2 className="textt text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Share Task</h2>
                         <input
                             type="text"
                             value={state.shareWithUsername}

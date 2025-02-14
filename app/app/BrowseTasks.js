@@ -38,7 +38,7 @@ export default function BrowseTasks() {
     }, [searchQuery, statusFilter, priorityFilter, dateFilter, user]);
 
     return (
-        <div className="p-6 border border-gray-300 rounded-lg shadow-lg">
+        <div className="p-5 border border-gray-300 rounded-lg shadow-lg">
             <input
                 type="text"
                 placeholder="Browse tasks"

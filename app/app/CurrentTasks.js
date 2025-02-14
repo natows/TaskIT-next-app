@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback} from "react";
 import { useRouter } from "next/navigation";
 import { UserContext } from "./login/UserContext";
 import { NotificationContext } from "./NotificationContext";
@@ -46,7 +46,9 @@ export default function CurrentTasks() {
         }
     };
 
-    const toggleTaskStatus = (task, date) => {
+   
+
+    const toggleTaskStatus = useCallback((task, date) => {
         if (!user) return;
 
         const userId = user.userId;
@@ -64,15 +66,15 @@ export default function CurrentTasks() {
             setTodaysTasks(updatedTasks.filter(task => !task.done));
             setDoneTasks(updatedTasks.filter(task => task.done));
             if (updatedTasks.every(task => task.done)) {
-                addNotification('All tasks for today are done!', 'success');
+                addNotification("All tasks for today are done!", "success");
             }
         } else {
             setTomorrowsTasks(updatedTasks.filter(task => !task.done));
             setDoneTomorrowsTasks(updatedTasks.filter(task => task.done));
         }
 
-        setRefresh(!refresh);
-    };
+        setRefresh(prev => !prev);
+    }, [user, setTodaysTasks, setDoneTasks, setTomorrowsTasks, setDoneTomorrowsTasks, addNotification]);
 
     const handleTaskClick = (date) => {
         router.push(`/${date}`);

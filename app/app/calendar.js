@@ -1,22 +1,19 @@
 "use client";
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from "next/link";
 
 export default function Calendar() {
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [daysInMonth, setDaysInMonth] = useState([]);
     const [month, setMonth] = useState(currentDate.getMonth());
     const [year, setYear] = useState(currentDate.getFullYear());
 
-    useEffect(() => {
-        const lastDayOfMonth = new Date(year, month + 1, 0); 
-
-        const daysInMonth = [];
+    const daysInMonth = useMemo(() => {
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+        const days = [];
         for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-            daysInMonth.push(i);
+            days.push(i);
         }
-
-        setDaysInMonth(daysInMonth);
+        return days;
     }, [month, year]);
 
     const handleMonthChange = (e) => {
@@ -45,13 +42,11 @@ export default function Calendar() {
         setCurrentDate(newDate);
     };
 
-    const initialDate = useMemo(() => {
-        return () => {
-            const now = new Date();
-            setMonth(now.getMonth());
-            setYear(now.getFullYear());
-            setCurrentDate(now);
-        };
+    const initialDate = useCallback(() => {
+        const now = new Date();
+        setMonth(now.getMonth());
+        setYear(now.getFullYear());
+        setCurrentDate(now);
     }, []);
 
     const getFirstDayOfMonth = () => {
@@ -70,7 +65,7 @@ export default function Calendar() {
     };
 
     return (
-        <div className="calendar-dark bg-white rounded-lg shadow-lg p-6">
+        <div className="calendar-dark bg-white rounded-lg shadow-lg p-6 border border-gray-300">
             <div className="calendar-header flex justify-between items-center mb-4">
                 <button onClick={previousMonth} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">
                     Previous

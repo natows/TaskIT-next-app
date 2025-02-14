@@ -5,7 +5,11 @@ import { UserContext } from "../../login/UserContext";
 export default function TaskExportImport() {
     const { user } = useContext(UserContext);
     const [message, setMessage] = useState("");
+    
 
+    if (!user){
+        return <p>Please log in to export your tasks</p>
+    }
     useEffect(() => {
         if (message) {
             const timer = setTimeout(() => {
@@ -164,24 +168,25 @@ export default function TaskExportImport() {
     };
 
     return (
-        <div>
-            <h2>Export Your Tasks</h2>
-            <div>
+        <div className="p-6 min-h-[50vh] bg-gradient-to-r from-blue-100 to-blue-200 dark:bg-gradient-to-r dark:from-gray-800 dark:to-gray-900">
+            <h2 className="textt text-3xl font-bold mb-6 text-center text-gray-800 dark:text-gray-200">Export Your Tasks</h2>
+            <div className="flex justify-center space-x-4 mb-6">
                 <button onClick={() => exportTasks("json")} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">Export as JSON</button>
                 <button onClick={() => exportTasks("csv")} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">Export as CSV</button>
                 <button onClick={() => exportTasks("xml")} className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 transition">Export as XML</button>
             </div>
 
-            <div>
-                <h3>Import Your Tasks</h3>
+            <div className="flex flex-col items-center">
+                <h3 className="textt text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">Import Your Tasks</h3>
                 <input
                     type="file"
                     accept=".json,.csv,.xml"
                     onChange={importTasks}
+                    className="mb-4"
                 />
             </div>
 
-            {message && <p className="mt-4 text-red-500">{message}</p>}
+            {message && <p className="mt-4 text-red-500 text-center">{message}</p>}
         </div>
     );
 }

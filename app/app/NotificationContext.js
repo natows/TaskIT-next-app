@@ -6,6 +6,7 @@ export const NotificationContext = createContext();
 
 export const NotificationProvider = ({ children }) => {
     const [notifications, setNotifications] = useState([]);
+    const [tasks, setTasks] = useState([]);
     const { user } = useContext(UserContext);
 
     const addNotification = (message, type = "info") => {
@@ -28,6 +29,10 @@ export const NotificationProvider = ({ children }) => {
         );
     };
 
+    const refreshTasks = () => {
+        setTasks([...tasks]);
+    };
+
     const addTask = (task, date) => {
         const userId = user.userId;
         const storedData = localStorage.getItem(userId);
@@ -39,6 +44,7 @@ export const NotificationProvider = ({ children }) => {
 
         parsedData.tasksByDate[date].tasks.push(task);
         localStorage.setItem(userId, JSON.stringify(parsedData));
+        refreshTasks();
     };
 
     useEffect(() => {
@@ -63,7 +69,7 @@ export const NotificationProvider = ({ children }) => {
     }, [notifications, user]);
 
     return (
-        <NotificationContext.Provider value={{ notifications, addNotification, removeNotification, markAllAsRead, addTask }}>
+        <NotificationContext.Provider value={{ notifications, addNotification, removeNotification, markAllAsRead, addTask, tasks }}>
             {children}
         </NotificationContext.Provider>
     );
