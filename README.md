@@ -8,13 +8,13 @@ Brak backendu – wszystkie dane przechowywane lokalnie z wykorzystaniem `localS
 ## Technologie
 
 ### Frameworki i biblioteki
-- **Next.js 15 (App Router)** – dynamiczny routing, SSR/CSR
+- **Next.js 15 (App Router)**
 - **React 19** – komponenty funkcyjne, hooki, lazy loading
-- **Tailwind CSS + Material UI** – nowoczesny, responsywny interfejs
+- **Tailwind CSS + Material UI**
 
 ### Formularze i dane
-- **Formik + Yup** – obsługa formularzy i walidacja
-- **LocalStorage API** – trwałość danych bez potrzeby backendu
+- **Formik + Yup** 
+- **LocalStorage API** 
 
 ---
 
