@@ -1,2 +1,40 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/vAiI5XiT)
-[![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=17674152&assignment_repo_type=AssignmentRepo)
+# Aplikacja do zarządzania zadaniami (Next.js + React)
+
+Frontendowa aplikacja napisana w **Next.js 15** i **React 19**, stworzona jako projekt edukacyjny w trakcie nauki Reacta.  
+Brak backendu – wszystkie dane przechowywane lokalnie z wykorzystaniem `localStorage`.
+
+---
+
+## Technologie
+
+### Frameworki i biblioteki
+- **Next.js 15 (App Router)** – dynamiczny routing, SSR/CSR
+- **React 19** – komponenty funkcyjne, hooki, lazy loading
+- **Tailwind CSS + Material UI** – nowoczesny, responsywny interfejs
+
+### Formularze i dane
+- **Formik + Yup** – obsługa formularzy i walidacja
+- **LocalStorage API** – trwałość danych bez potrzeby backendu
+
+---
+
+## Zastosowane techniki
+
+- **Zarządzanie stanem**: Context API (`User`, `Theme`, `Notification`, `UserActivity`) + `useReducer` w wybranych komponentach
+- **Wydajność**: `React.lazy`, `Suspense`, `useMemo`, `useCallback`
+- **Import / Eksport danych**: obsługa formatów **JSON**, **CSV**, **XML**
+- **Dynamiczne komponenty**: kalendarz, powiadomienia, załączniki, komentarze, udostępnianie zadań
+- **Tryb jasny/ciemny**: przechowywanie preferencji z użyciem kontekstu
+- **Panel administracyjny**: zarządzanie użytkownikami oraz logi aktywności
+
+---
+
+## Funkcje aplikacji
+
+- Zarządzanie zadaniami: CRUD, priorytety, statusy
+- Autoryzacja użytkowników i system ról
+- Udostępnianie zadań innym użytkownikom
+- Komentarze i dodawanie załączników do zadań
+- Eksport i import danych zadań (JSON / CSV / XML)
+- System powiadomień
+- Dashboard administratora z logami aktywności i zarządzaniem użytkownikami
